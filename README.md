@@ -1,4 +1,4 @@
-# hijack
+# hijk (hijack)
 
 Dynamic instrumentation library for Windows x64
 
