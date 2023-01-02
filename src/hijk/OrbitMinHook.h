@@ -1,5 +1,8 @@
 #pragma once
 
+#include "MinHook.h"
+#include "trampoline.h"
+
 // Creates a Hook for the specified target function, in disabled state.
 // Parameters:
 //   pTarget    [in]  A pointer to the target function, which will be
@@ -33,5 +36,4 @@ MH_STATUS WINAPI Orbit_MH_DisableAllHooks(VOID);
 // Test asm function
 void WINAPI Orbit_MH_Test();
 
-BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
-BOOL CreatePrologFunction(PTRAMPOLINE ct);
+BOOL CreatePrologFunction(PTRAMPOLINE ct, LPVOID pPrologCallback, LPVOID pEpilogCallback);

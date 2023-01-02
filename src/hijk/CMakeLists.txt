@@ -2,8 +2,17 @@ enable_language(ASM_MASM)
 
 set(MINHOOK_DIR ${CMAKE_SOURCE_DIR}/third_party/minhook)
 
-set(HEADERS OrbitAsm.h include/hijack/hijack.h)
-set(SOURCES Orbit.asm OrbitAsm.cpp)
+set(HEADERS
+    OrbitAsm.h
+    OrbitMinHook.h
+    include/hijk/hijk.h
+)
+
+set(SOURCES 
+    Orbit.asm
+    OrbitAsm.cpp
+    OrbitMinHook.c
+)
 
 set(HDE_FILES
     ${MINHOOK_DIR}/src/HDE/hde32.h
@@ -29,8 +38,19 @@ source_group("MinHook"      FILES ${MINHOOK_FILES})
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
 
-add_library(hijack STATIC 
-	${SOURCES} ${HEADERS} ${HDE_FILES} ${MINHOOK_FILES}
-	)
+add_library(hijk STATIC 
+	${SOURCES} 
+    ${HEADERS} 
+    ${HDE_FILES} 
+    ${MINHOOK_FILES}
+)
 
-#set_source_files_properties(Orbit.asm PROPERTIES COMPILE_FLAGS "-x assembler-with-cpp")
+target_include_directories(hijk PRIVATE
+    ${MINHOOK_DIR}/include
+    ${MINHOOK_DIR}/src
+)
+
+target_include_directories(hijk PUBLIC 
+    "include"
+)
+
