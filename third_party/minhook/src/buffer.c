@@ -1,6 +1,6 @@
 ﻿/*
  *  MinHook - The Minimalistic API Hooking Library for x64/x86
- *  Copyright (C) 2009-2017 Tsuda Kageyu.
+ *  Copyright (C) 2009-2015 Tsuda Kageyu.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,6 +26,9 @@
  *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#define STRICT
+//#define NOMINMAX
+//#define _WIN32_WINNT 0x0501
 #include <windows.h>
 #include "buffer.h"
 
@@ -85,12 +88,12 @@ VOID UninitializeBuffer(VOID)
 }
 
 //-------------------------------------------------------------------------
-#if defined(_M_X64) || defined(__x86_64__)
+#ifdef _M_X64
 static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAllocationGranularity)
 {
     ULONG_PTR tryAddr = (ULONG_PTR)pAddress;
 
-    // Round down to the allocation granularity.
+    // Round down to the next allocation granularity.
     tryAddr -= tryAddr % dwAllocationGranularity;
 
     // Start from the previous allocation granularity multiply.
@@ -99,7 +102,7 @@ static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAlloc
     while (tryAddr >= (ULONG_PTR)pMinAddr)
     {
         MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0)
+        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
             break;
 
         if (mbi.State == MEM_FREE)
@@ -116,12 +119,12 @@ static LPVOID FindPrevFreeRegion(LPVOID pAddress, LPVOID pMinAddr, DWORD dwAlloc
 #endif
 
 //-------------------------------------------------------------------------
-#if defined(_M_X64) || defined(__x86_64__)
+#ifdef _M_X64
 static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAllocationGranularity)
 {
     ULONG_PTR tryAddr = (ULONG_PTR)pAddress;
 
-    // Round down to the allocation granularity.
+    // Round down to the next allocation granularity.
     tryAddr -= tryAddr % dwAllocationGranularity;
 
     // Start from the next allocation granularity multiply.
@@ -130,7 +133,7 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
     while (tryAddr <= (ULONG_PTR)pMaxAddr)
     {
         MEMORY_BASIC_INFORMATION mbi;
-        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(mbi)) == 0)
+        if (VirtualQuery((LPVOID)tryAddr, &mbi, sizeof(MEMORY_BASIC_INFORMATION)) == 0)
             break;
 
         if (mbi.State == MEM_FREE)
@@ -151,7 +154,7 @@ static LPVOID FindNextFreeRegion(LPVOID pAddress, LPVOID pMaxAddr, DWORD dwAlloc
 static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
 {
     PMEMORY_BLOCK pBlock;
-#if defined(_M_X64) || defined(__x86_64__)
+#ifdef _M_X64
     ULONG_PTR minAddr;
     ULONG_PTR maxAddr;
 
@@ -174,7 +177,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
     // Look the registered blocks for a reachable one.
     for (pBlock = g_pMemoryBlocks; pBlock != NULL; pBlock = pBlock->pNext)
     {
-#if defined(_M_X64) || defined(__x86_64__)
+#ifdef _M_X64
         // Ignore the blocks too far.
         if ((ULONG_PTR)pBlock < minAddr || (ULONG_PTR)pBlock >= maxAddr)
             continue;
@@ -184,7 +187,7 @@ static PMEMORY_BLOCK GetMemoryBlock(LPVOID pOrigin)
             return pBlock;
     }
 
-#if defined(_M_X64) || defined(__x86_64__)
+#ifdef _M_X64
     // Alloc a new block above if not found.
     {
         LPVOID pAlloc = pOrigin;
@@ -256,6 +259,7 @@ LPVOID AllocateBuffer(LPVOID pOrigin)
     pBlock->pFree = pSlot->pNext;
     pBlock->usedCount++;
 #ifdef _DEBUG
+    static volatile int SizeOfSlot = sizeof(MEMORY_SLOT);
     // Fill the slot with INT3 for debugging.
     memset(pSlot, 0xCC, sizeof(MEMORY_SLOT));
 #endif
@@ -306,7 +310,7 @@ VOID FreeBuffer(LPVOID pBuffer)
 BOOL IsExecutableAddress(LPVOID pAddress)
 {
     MEMORY_BASIC_INFORMATION mi;
-    VirtualQuery(pAddress, &mi, sizeof(mi));
+    VirtualQuery(pAddress, &mi, sizeof(MEMORY_BASIC_INFORMATION));
 
     return (mi.State == MEM_COMMIT && (mi.Protect & PAGE_EXECUTE_FLAGS));
 }

@@ -1,6 +1,6 @@
 ﻿/*
  *  MinHook - The Minimalistic API Hooking Library for x64/x86
- *  Copyright (C) 2009-2017 Tsuda Kageyu.
+ *  Copyright (C) 2009-2015 Tsuda Kageyu.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -92,8 +92,11 @@ typedef struct _TRAMPOLINE
     LPVOID pTarget;         // [In] Address of the target function.
     LPVOID pDetour;         // [In] Address of the detour function.
     LPVOID pTrampoline;     // [In] Buffer address for the trampoline and relay function.
+    LPVOID pPrologCallback;       // [In] Prolog callback function.
+    LPVOID pEpilogCallback;       // [In] Epilog callback function.
+    LPVOID pReturnAddressCb;      // [In] GetReturnAddress function (returns thread local buffered return address)
 
-#if defined(_M_X64) || defined(__x86_64__)
+#ifdef _M_X64
     LPVOID pRelay;          // [Out] Address of the relay function.
 #endif
     BOOL   patchAbove;      // [Out] Should use the hot patch area?
@@ -103,3 +106,4 @@ typedef struct _TRAMPOLINE
 } TRAMPOLINE, *PTRAMPOLINE;
 
 BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
+BOOL CreatePrologFunction(PTRAMPOLINE ct);
