@@ -4,6 +4,7 @@ set(MINHOOK_DIR ${CMAKE_SOURCE_DIR}/third_party/minhook)
 
 set(HEADERS
     OrbitAsm.h
+    OrbitAsmC.h
     include/hijk/hijk.h
 )
 
@@ -37,6 +38,8 @@ source_group("MinHook"      FILES ${MINHOOK_FILES})
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
 
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /INCREMENTAL:NO" )
+
 add_library(hijk SHARED 
 	${SOURCES} 
     ${HEADERS} 
@@ -47,6 +50,7 @@ add_library(hijk SHARED
 target_include_directories(hijk PRIVATE
     ${MINHOOK_DIR}/include
     ${MINHOOK_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/hijk
 )
 
 target_include_directories(hijk PUBLIC 

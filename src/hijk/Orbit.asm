@@ -36,6 +36,11 @@ OrbitPrologAsm PROC
     push    R10
     push    R11
 
+    sub     RSP, 100h               ;// will hold xmm registers
+    mov     RCX, RSP
+    mov     RAX, OrbitGetSSEContext
+    call    RAX
+
     mov     RDX, RSP                ;// pointer to context structure
     mov     R8,  RBP                ;// compute size of context for sanity check
     sub     R8,  RSP
@@ -48,6 +53,11 @@ OrbitPrologAsm PROC
     call    RAX                     ;// User prolog function  
 
     add     RSP, 20h
+
+    mov     RCX, RSP                ;// Restore xmm registers
+    mov     RAX, OrbitSetSSEContext
+    call    RAX
+    add     RSP, 100h
                                     ;// OVERWRITE RETURN ADDRESS
     mov     R10, 0123456789ABCDEFh  ;// will be overwritten with epilog address
     mov     qword ptr[RBP+16], R10  ;// overwrite return address with epilog address
@@ -70,7 +80,7 @@ OrbitPrologAsm PROC
 OrbitPrologAsm  ENDP
 
 OrbitPrologOnlyAsm PROC
-     sub     RSP, 8                  ;// will hold address of trampoline
+    sub     RSP, 8                  ;// will hold address of trampoline
     push    RBP                     
     mov     RBP, RSP
     
@@ -81,6 +91,11 @@ OrbitPrologOnlyAsm PROC
     push    R9
     push    R10
     push    R11
+
+    sub     RSP, 100h               ;// will hold xmm registers
+    mov     RCX, RSP
+    mov     RAX, OrbitGetSSEContext
+    call    RAX
 
     mov     RDX, RSP                ;// pointer to context structure
     mov     R8,  RBP                ;// compute size of context for sanity check
@@ -94,6 +109,11 @@ OrbitPrologOnlyAsm PROC
     call    RAX                     ;// User prolog function  
 
     add     RSP, 20h
+
+    mov     RCX, RSP                ;// Restore xmm registers
+    mov     RAX, OrbitSetSSEContext
+    call    RAX
+    add     RSP, 100h
                                     ;// OVERWRITE RETURN ADDRESS
     mov     R10, 0123456789ABCDEFh  ;// will be overwritten with epilog address
     ;// mov     qword ptr[RBP+16], R10  ;// overwrite return address with epilog address
@@ -126,9 +146,21 @@ OrbitEpilogAsm PROC
     sub     RSP , 16                
     movdqu  xmmword ptr[RSP], xmm0  ;// Save XMM0 (float return value)
     mov     R11, 0123456789ABCDEFh  ;// Will be overwritten by callback address
+
+    sub     RSP, 100h               ;// will hold xmm registers
+    mov     RCX, RSP
+    mov     RAX, OrbitGetSSEContext
+    call    RAX
+
     sub     RSP, 20h                 
     call    R11                     ;// Call user epilog (returns original caller address)
     add     RSP, 20h                 
+
+    mov     RCX, RSP                ;// Restore xmm registers
+    mov     R11, OrbitSetSSEContext
+    call    R11
+    add     RSP, 100h
+
     mov     R11, RAX                ;// RDX contains return address
     movdqu  xmm0, xmmword ptr[RSP]  ;// XMM0 contains float return value
     add     RSP , 16                
