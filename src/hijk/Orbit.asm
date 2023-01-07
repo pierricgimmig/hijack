@@ -39,6 +39,8 @@ OrbitPrologAsm PROC
     mov     R8,  RBP
     add     R8,  16
     mov     qword ptr[RBP+8], RDX   ;// Write address of trampoline for ret instruction
+    mov     RDX, RBP
+    add     RDX, 16
 
     sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
     call    RAX                     ;// User prolog function  
@@ -72,6 +74,9 @@ OrbitEpilogAsm PROC
     sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
 
     mov     RAX, 0123456789ABCDEFh  ;// Will be ovewritten with orbit epilogue stub address
+    ; // mov RCX, 0123456789ABCDEFh ;// Will be ovewritten with orbit epilogue data
+    mov     RDX, RBP
+    add     RDX, 8
     call    RAX                     ;// User prolog function  
 
     add     RSP, 28h
