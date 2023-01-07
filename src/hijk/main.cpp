@@ -16,7 +16,7 @@ extern "C" {
     }
     void Epilogue(void* original_function, struct EpilogueContext* epilogue_context) {
         ++g_count;
-        //std::cout << "Epilogue!\n";
+        std::cout << "Epilogue!\n";
     }
 }
 

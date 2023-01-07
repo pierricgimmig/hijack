@@ -32,23 +32,23 @@ OrbitPrologAsm PROC
     push    RCX
     push    RDX
     push    R8
+    push    R9
 
     mov     RAX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog stub
     mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog data
     mov     RDX, 0123456789ABCDEFh  ;// will be overwritten with address of trampoline for ret instruction
-    mov     R8,  RBP
-    add     R8,  16
+    mov     R8,  RSP                ;// saved registers address on the stack
     mov     qword ptr[RBP+8], RDX   ;// Write address of trampoline for ret instruction
-    mov     RDX, RBP
-    add     RDX, 16
+    lea     RDX, [RBP+16]
 
-    sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
+    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
     call    RAX                     ;// User prolog function  
-    add     RSP, 28h
+    add     RSP, 20h
 
     mov     RDX,  0123456789ABCDEFh  ;// will be overwritten with address of epilog stub
     mov     qword ptr[RBP+16], RDX  ;// Write address of epilog stub in place of original return address
     
+    pop     R9
     pop     R8
     pop     RDX
     pop     RCX                     ;// restore volatile registers
