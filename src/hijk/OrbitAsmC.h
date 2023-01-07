@@ -11,6 +11,7 @@ enum OrbitPrologOffset
     Prolog_OrbitStub = 0,
     Prolog_Data,
     Prolog_TrampolineResumeAddress,
+    Prolog_EpilogAddress,
     Prolog_NumOffsets
 };
 

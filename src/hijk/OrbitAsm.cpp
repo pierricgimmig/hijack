@@ -1,6 +1,7 @@
 #include "OrbitAsm.h"
 #include <sstream>
 #include <vector>
+#include <iostream>
 
 OrbitProlog GProlog;
 OrbitEpilog GEpilog;
@@ -8,21 +9,45 @@ OrbitEpilog GEpilog;
 uint64_t g_prolog_count = 0;
 uint64_t g_epilog_count = 0;
 
-void UserPrologStub(void* prolog_data) {
-    // Save int registers
-    // Save xmm registers
+thread_local std::vector<void*> return_addresses;
 
+struct ContextScope {
+    ContextScope() {
+        HijkGetCurrentThreadContext(&context_);
+        OrbitGetSSEContext(&sse_context_);
+    }
+
+    ~ContextScope() {
+        HijkSetCurrentThreadContext(&context_);
+        OrbitSetSSEContext(&sse_context_);
+    }
+
+    uint64_t context_[16];
+    OrbitSSEContext sse_context_;
+};
+
+void UserPrologStub(void* prolog_data, void** address_of_return_address) {
+    ContextScope context_scope;
+    // prolog_data: original_address, user_callback
+
+    std::cout << "Prolog!\n";
+    return_addresses.push_back(*address_of_return_address);
     ++g_prolog_count;
-
-    // restore xmm registers
-    // restore int registers
 }
 
-void UserEpilogStub(void* original_function, void* user_callback,
-    void* epilogue, void* trampoline_to_original_function) {
-    // 1. Write return address on stack
-    ++g_epilog_count;
+void UserEpilogStub(void* epilog_data, void** address_of_return_address) {
+    ContextScope context_scope;
 
+    std::cout << "Epilog!\n";
+
+    // epilog_data: original_address, user_callback
+    // 
+    // 1. Write return address on stack
+    void* return_address = return_addresses.back();
+    return_addresses.pop_back();
+    *address_of_return_address = return_address;
+
+    ++g_epilog_count;
 }
 
 //-----------------------------------------------------------------------------

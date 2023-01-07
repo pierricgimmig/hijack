@@ -581,10 +581,11 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_TrampolineResumeAddress]], &ct->pTrampoline, sizeof(LPVOID));
     memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_OrbitStub]], &prolog_stub, sizeof(LPVOID));
     memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_Data]], &prolog_stub, sizeof(LPVOID));
+    memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_EpilogAddress]], &epilog_stub, sizeof(LPVOID));
 
     // Create OrbitEpilog
     memcpy( pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size );
-    memcpy( &pEpilog[orbitEpilog->m_Offsets[Epilog_CallbackAddress]], &ct->pEpilogCallback,  sizeof(LPVOID) );
+    memcpy( &pEpilog[orbitEpilog->m_Offsets[Epilog_CallbackAddress]], &epilog_stub,  sizeof(LPVOID) );
 
 #ifdef _M_X64
     ct->pRelay = pProlog;
