@@ -6,14 +6,22 @@ OrbitProlog GProlog;
 OrbitEpilog GEpilog;
 
 uint64_t g_prolog_count = 0;
+uint64_t g_epilog_count = 0;
+
 void UserPrologStub(void* prolog_data) {
-	// 1. Write return address on stack
+    // Save int registers
+    // Save xmm registers
+
     ++g_prolog_count;
+
+    // restore xmm registers
+    // restore int registers
 }
 
 void UserEpilogStub(void* original_function, void* user_callback,
     void* epilogue, void* trampoline_to_original_function) {
     // 1. Write return address on stack
+    ++g_epilog_count;
 
 }
 

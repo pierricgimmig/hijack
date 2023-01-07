@@ -30,25 +30,20 @@ OrbitPrologAsm PROC
     
     push    RAX                     ;// Save volatile registers
     push    RCX
+    push    RDX
 
-    mov     RAX, 0123456789ABCDEFh  ;// will be overwritten with address of original function
-    push    RAX 
-    mov     RAX, 0123456789ABCDEFh   ;// will be overwritten with address of user callback
-    push    RAX 
-    mov     RAX, 0123456789ABCDEFh   ;// will be overwritten with address of epilogue address
-    push    RAX 
-    mov     RAX, 0123456789ABCDEFh   ;// will be overwritten with address of trampoline to original function
-    push    RAX 
-    mov     RAX, 0123456789ABCDEFh   ;// Will be ovewritten with orbit prologue stub address
-    push    RAX 
+    mov     RAX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog stub
+    mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog data
+    mov     RDX, 0123456789ABCDEFh  ;// will be overwritten with address of trampoline for ret instruction
 
-    mov     RCX, RSP
+    mov     qword ptr[RBP+8], RDX   ;// Write address of trampoline for ret instruction
 
     sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
     call    RAX                     ;// User prolog function  
 
     add     RSP, 28h
 
+    pop     RDX
     pop     RCX                     ;// restore volatil registers
     pop     RAX
 

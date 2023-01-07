@@ -574,11 +574,13 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
 
     // Create OrbitProlog
     memcpy( pProlog, orbitProlog->m_Code, orbitProlog->m_Size );
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalFunction]],&ct->pTarget,          sizeof(LPVOID) );
+   /* memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalFunction]],&ct->pTarget,          sizeof(LPVOID) );
     memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_CallbackAddress]], &ct->pPrologCallback,  sizeof(LPVOID) );
     memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalAddress]], &ct->pTrampoline,      sizeof(LPVOID) );
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_EpilogAddress]],   &pEpilog,              sizeof(LPVOID) );
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OrbitStub]], &prolog_stub, sizeof(LPVOID));
+    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_EpilogAddress]],   &pEpilog,              sizeof(LPVOID) );*/
+    memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_TrampolineResumeAddress]], &ct->pTrampoline, sizeof(LPVOID));
+    memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_OrbitStub]], &prolog_stub, sizeof(LPVOID));
+    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_Data]], &prolog_stub, sizeof(LPVOID));
 
     // Create OrbitEpilog
     memcpy( pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size );

@@ -1,0 +1,30 @@
+
+
+// Prologue trampoline
+
+- push address of trampoline on stack 
+- save int registers 
+- save xmm registers 
+- pointer to saved registers(+size of context) 
+- shadow space + stack alignment
+- Call user Prolog
+- restore shadow
+- restore xmm registers
+- overwrite return address with address of trampoline to original function
+- restore int registers
+- ret
+
+1. address of trampoline to original function 
+2. address of original function 
+3. address of user callback 
+4. address of epilogue
+
+void UserPrologStub(void *trampoline_to_original_function, void *original_function, 
+                    void *user_callback, void *epilogue) {
+    // 1. Write return address on stack
+
+}
+
+
+// Epilogue trampoline
+
