@@ -4,6 +4,8 @@
 #include <iostream>
 #include <debugapi.h>
 
+static volatile int g_count;
+
 __declspec(noinline) void MyFunction(int a, float b) {
     std::cout << "a: " << a << " b: " << b << std::endl;
 }
@@ -13,7 +15,8 @@ extern "C" {
         std::cout << "Prologue!\n";
     }
     void Epilogue(void* original_function, struct EpilogueContext* epilogue_context) {
-        std::cout << "Epilogue!\n";
+        ++g_count;
+        //std::cout << "Epilogue!\n";
     }
 }
 

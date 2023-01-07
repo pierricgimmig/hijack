@@ -753,6 +753,7 @@ MH_STATUS WINAPI MH_Orbit_CreateHookPrologEpilog(LPVOID pTarget, LPVOID pPrologC
                     ct.pPrologCallback = pPrologCallback;
                     ct.pEpilogCallback = pEpilogCallback;
                     ct.pReturnAddressCb = pReturnAddressCallback;
+                    ct.pPrologStub = 0;
                     if (CreatePrologFunction(&ct))
                     {
                         PHOOK_ENTRY pHook = AddHookEntry();

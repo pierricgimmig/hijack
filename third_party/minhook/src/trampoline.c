@@ -569,12 +569,16 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
         assert(0);
     }
 
+    void* prolog_stub = GetOrbitPrologStubAddress();
+    void* epilog_stub = GetOrbitEpilogStubAddress();
+
     // Create OrbitProlog
     memcpy( pProlog, orbitProlog->m_Code, orbitProlog->m_Size );
     memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalFunction]],&ct->pTarget,          sizeof(LPVOID) );
     memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_CallbackAddress]], &ct->pPrologCallback,  sizeof(LPVOID) );
     memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalAddress]], &ct->pTrampoline,      sizeof(LPVOID) );
     memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_EpilogAddress]],   &pEpilog,              sizeof(LPVOID) );
+    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OrbitStub]], &prolog_stub, sizeof(LPVOID));
 
     // Create OrbitEpilog
     memcpy( pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size );

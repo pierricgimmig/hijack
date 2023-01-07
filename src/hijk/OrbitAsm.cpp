@@ -5,6 +5,18 @@
 OrbitProlog GProlog;
 OrbitEpilog GEpilog;
 
+uint64_t g_prolog_count = 0;
+void UserPrologStub(void* prolog_data) {
+	// 1. Write return address on stack
+    ++g_prolog_count;
+}
+
+void UserEpilogStub(void* original_function, void* user_callback,
+    void* epilogue, void* trampoline_to_original_function) {
+    // 1. Write return address on stack
+
+}
+
 //-----------------------------------------------------------------------------
 #ifdef _WIN64
 std::vector<byte> dummyEnd     = { 0x49, 0xBB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F };
@@ -139,6 +151,13 @@ const Epilog* GetOrbitEpilog()
     if( !GEpilog.m_Data.m_Code )
         GEpilog.Init();
     return &GEpilog.m_Data;
+}
+
+void* GetOrbitPrologStubAddress() {
+    return &UserPrologStub;
+}
+void* GetOrbitEpilogStubAddress() {
+    return &UserEpilogStub;
 }
 
 #ifndef _WIN64

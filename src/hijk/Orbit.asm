@@ -24,6 +24,110 @@
 ; XMM6:XMM15, YMM6:YMM15        Nonvolatile (XMM), Volatile (upper half of YMM) Must be preserved as needed by callee. YMM registers must be preserved as needed by caller.
 
 OrbitPrologAsm PROC
+    sub     RSP, 8                  ;// will hold address of trampoline for return instruction
+    push    RBP                     
+    mov     RBP, RSP
+    
+    push    RAX                     ;// Save volatile registers
+    push    RCX
+
+    mov     RAX, 0123456789ABCDEFh  ;// will be overwritten with address of original function
+    push    RAX 
+    mov     RAX, 0123456789ABCDEFh   ;// will be overwritten with address of user callback
+    push    RAX 
+    mov     RAX, 0123456789ABCDEFh   ;// will be overwritten with address of epilogue address
+    push    RAX 
+    mov     RAX, 0123456789ABCDEFh   ;// will be overwritten with address of trampoline to original function
+    push    RAX 
+    mov     RAX, 0123456789ABCDEFh   ;// Will be ovewritten with orbit prologue stub address
+    push    RAX 
+
+    mov     RCX, RSP
+
+    sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
+    call    RAX                     ;// User prolog function  
+
+    add     RSP, 28h
+
+    pop     RCX                     ;// restore volatil registers
+    pop     RAX
+
+    pop     RBP
+    ret                             ;// Jump to orignial function through trampoline
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+OrbitPrologAsm  ENDP
+
+OrbitPrologAsm1 PROC
+    sub     RSP, 8                  ;// will hold address of trampoline for return instruction
+    push    RBP                     
+    mov     RBP, RSP
+    
+    push    RAX                     ;// Save volatile registers
+    push    RCX
+    push    RDX
+    push    R8
+    push    R9
+    push    R10
+    push    R11
+
+    sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
+
+                                    ;// CALL USER PROLOG - void Prolog( void* a_OriginalFunctionAddress, void* a_Context, unsigned a_ContextSize );
+    mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of original function
+    mov     RDX, 0123456789ABCDEFh  ;// will be overwritten with address of user callback
+    mov     R8,  0123456789ABCDEFh  ;// will be overwritten with address of epilogue address
+    mov     R9,  0123456789ABCDEFh  ;// will be overwritten with address of trampoline to original function
+    mov     RAX, 0123456789ABCDEFh  ;// Will be ovewritten with orbit prologue stub address
+    call    RAX                     ;// User prolog function  
+
+    add     RSP, 28h
+
+    pop     R11                     ;// restore volatil registers
+    pop     R10
+    pop     R9
+    pop     R8
+    pop     RDX
+    pop     RCX
+    pop     RAX
+
+    pop     RBP
+    ret                             ;// Jump to orignial function through trampoline
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+OrbitPrologAsm1  ENDP
+
+OrbitEpilogAsm PROC  
+    sub     RSP, 8                  ;// will hold caller address
+    push    RBP                     
+    mov     RBP, RSP
+    push    RAX                     ;// Save volatile registers
+    push    RCX
+    push    RDX
+    push    R8
+    push    R9
+    push    R10
+    push    R11
+
+    sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
+
+    mov     RAX, 0123456789ABCDEFh  ;// Will be ovewritten with orbit epilogue stub address
+    call    RAX                     ;// User prolog function  
+
+    add     RSP, 28h
+
+    pop     R11                     ;// restore volatil registers
+    pop     R10
+    pop     R9
+    pop     R8
+    pop     RDX
+    pop     RCX
+    pop     RAX
+
+    pop     RBP
+    ret                             ;// Jump to orignial function through trampoline
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+OrbitEpilogAsm ENDP
+
+OrbitPrologAsmOld PROC
     sub     RSP, 8                  ;// will hold address of trampoline
     push    RBP                     
     mov     RBP, RSP
@@ -77,7 +181,7 @@ OrbitPrologAsm PROC
     pop     RBP
     ret                             ;// Jump to orignial function through trampoline
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitPrologAsm  ENDP
+OrbitPrologAsmOld  ENDP
 
 OrbitPrologOnlyAsm PROC
     sub     RSP, 8                  ;// will hold address of trampoline
@@ -100,6 +204,7 @@ OrbitPrologOnlyAsm PROC
     mov     RDX, RSP                ;// pointer to context structure
     mov     R8,  RBP                ;// compute size of context for sanity check
     sub     R8,  RSP
+
 
     sub     RSP, 20h                ;// Shadow space - NOTE: stack pointer needs to be aligned on 16 bytes at this point                
 
@@ -136,7 +241,7 @@ OrbitPrologOnlyAsm PROC
 OrbitPrologOnlyAsm  ENDP
 
 
-OrbitEpilogAsm PROC
+OrbitEpilogAsmOld PROC
     push    RAX                     ;// Save RAX (return value)
     push    RBX
     push    RCX
@@ -173,7 +278,7 @@ OrbitEpilogAsm PROC
     push    R11                     ;// Push caller address on stack
     ret                             ;// return
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitEpilogAsm ENDP
+OrbitEpilogAsmOld ENDP
 
 OrbitGetSSEContext PROC
 movdqu xmmword ptr[RCX+0*16],  xmm0

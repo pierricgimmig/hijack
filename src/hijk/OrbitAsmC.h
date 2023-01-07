@@ -7,6 +7,7 @@ enum OrbitPrologOffset
     Prolog_CallbackAddress,
     Prolog_EpilogAddress,
     Prolog_OriginalAddress,
+    Prolog_OrbitStub,
     Prolog_NumOffsets
 };
 
@@ -39,6 +40,8 @@ extern "C" {
 #endif
 const struct Prolog* GetOrbitProlog();
 const struct Epilog* GetOrbitEpilog();
+void* GetOrbitPrologStubAddress();
+void* GetOrbitEpilogStubAddress();
 #ifdef __cplusplus
 }
 #endif
