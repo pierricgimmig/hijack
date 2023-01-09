@@ -8,10 +8,11 @@ enum OrbitPrologOffset
     // Prolog_EpilogAddress,
     // Prolog_OriginalAddress,
     
-    Prolog_OrbitStub = 0,
-    Prolog_Data,
+    Prolog_Data = 0,
+    /*Prolog_OrbitStub = 0,
+    
     Prolog_TrampolineResumeAddress,
-    Prolog_EpilogAddress,
+    Prolog_EpilogAddress,*/
     Prolog_NumOffsets
 };
 
@@ -21,6 +22,14 @@ struct Prolog
     byte *m_Code;
     size_t m_Size;
     size_t m_Offsets[Prolog_NumOffsets];
+};
+
+struct PrologData 
+{
+    void* asm_prolog_stub;
+    void* c_prolog_stub;
+    void* asm_epilog_stub;
+    void* tramploline_to_original_function;
 };
 
 //-----------------------------------------------------------------------------
@@ -47,6 +56,8 @@ extern "C"
     const struct Epilog *GetOrbitEpilog();
     void *GetOrbitPrologStubAddress();
     void *GetOrbitEpilogStubAddress();
+    void* GetOrbitPrologAsmStubAddress();
+    void* GetOrbitEpilogAsmStubAddress();
 #ifdef __cplusplus
 }
 #endif

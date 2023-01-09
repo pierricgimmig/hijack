@@ -29,7 +29,7 @@
 #pragma once
 
 // Size of each memory slot.
-#define MEMORY_SLOT_SIZE 512
+#define MEMORY_SLOT_SIZE 256
 
 VOID   InitializeBuffer(VOID);
 VOID   UninitializeBuffer(VOID);

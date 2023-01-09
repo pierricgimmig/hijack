@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 struct OrbitProlog
 {
-    OrbitProlog(){ memset( this, 0, sizeof( OrbitProlog ) ); }
+    OrbitProlog() { memset(this, 0, sizeof(OrbitProlog)); }
     void Init();
     Prolog m_Data;
 };
@@ -17,7 +17,7 @@ struct OrbitProlog
 //-----------------------------------------------------------------------------
 struct OrbitEpilog
 {
-    OrbitEpilog(){ memset( this, 0, sizeof( OrbitEpilog ) ); }
+    OrbitEpilog() { memset(this, 0, sizeof(OrbitEpilog)); }
     void Init();
     Epilog m_Data;
 };
@@ -47,11 +47,12 @@ struct OrbitSSEContext
 
 #ifdef _WIN64
 //-----------------------------------------------------------------------------
-extern "C" void OrbitGetSSEContext( OrbitSSEContext * a_Context );
-extern "C" void OrbitSetSSEContext( OrbitSSEContext * a_Context );
-extern "C" void HijkGetCurrentThreadContext(void * a_Context);
-extern "C" void HijkSetCurrentThreadContext(void * a_Context);
+extern "C" void OrbitGetSSEContext(OrbitSSEContext *a_Context);
+extern "C" void OrbitSetSSEContext(OrbitSSEContext *a_Context);
+extern "C" void HijkGetCurrentThreadContext(void *a_Context);
+extern "C" void HijkSetCurrentThreadContext(void *a_Context);
 extern "C" void OrbitPrologAsm();
+extern "C" void OrbitPrologAsmFixed();
 extern "C" void OrbitPrologOnlyAsm();
 extern "C" void OrbitEpilogAsm();
 #else

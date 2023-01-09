@@ -9,15 +9,18 @@ OrbitEpilog GEpilog;
 uint64_t g_prolog_count = 0;
 uint64_t g_epilog_count = 0;
 
-thread_local std::vector<void*> return_addresses;
+thread_local std::vector<void *> return_addresses;
 
-struct ContextScope {
-    ContextScope() {
+struct ContextScope
+{
+    ContextScope()
+    {
         HijkGetCurrentThreadContext(&context_);
         OrbitGetSSEContext(&sse_context_);
     }
 
-    ~ContextScope() {
+    ~ContextScope()
+    {
         HijkSetCurrentThreadContext(&context_);
         OrbitSetSSEContext(&sse_context_);
     }
@@ -26,7 +29,8 @@ struct ContextScope {
     OrbitSSEContext sse_context_;
 };
 
-void UserPrologStub(void* prolog_data, void** address_of_return_address) {
+void UserPrologStub(void *prolog_data, void **address_of_return_address)
+{
     ContextScope context_scope;
     // prolog_data: original_address, user_callback
 
@@ -35,15 +39,16 @@ void UserPrologStub(void* prolog_data, void** address_of_return_address) {
     ++g_prolog_count;
 }
 
-void UserEpilogStub(void* epilog_data, void** address_of_return_address) {
+void UserEpilogStub(void *epilog_data, void **address_of_return_address)
+{
     ContextScope context_scope;
 
     std::cout << "Epilog!\n";
 
     // epilog_data: original_address, user_callback
-    // 
+    //
     // 1. Write return address on stack
-    void* return_address = return_addresses.back();
+    void *return_address = return_addresses.back();
     return_addresses.pop_back();
     *address_of_return_address = return_address;
 
@@ -52,69 +57,70 @@ void UserEpilogStub(void* epilog_data, void** address_of_return_address) {
 
 //-----------------------------------------------------------------------------
 #ifdef _WIN64
-std::vector<byte> dummyEnd     = { 0x49, 0xBB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F };
-std::vector<byte> dummyAddress = { 0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01 };
+std::vector<byte> dummyEnd = {0x49, 0xBB, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x0F};
+std::vector<byte> dummyAddress = {0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01};
 #else
-std::vector<byte> dummyEnd     = { 0xB8, 0xFF, 0xFF, 0xFF, 0x0F };
-std::vector<byte> dummyAddress = { 0x78, 0x56, 0x34, 0x12 };
+std::vector<byte> dummyEnd = {0xB8, 0xFF, 0xFF, 0xFF, 0x0F};
+std::vector<byte> dummyAddress = {0x78, 0x56, 0x34, 0x12};
 #endif
 
 //-----------------------------------------------------------------------------
-#define PRINT_VAR( var )	    PrintVar( #var, var )
-#define PRINT_VARN( name, var )	PrintVar( name, var )
-#define PRINT_VAR_INL( var )    PrintVar( #var, var, true )
+#define PRINT_VAR(var) PrintVar(#var, var)
+#define PRINT_VARN(name, var) PrintVar(name, var)
+#define PRINT_VAR_INL(var) PrintVar(#var, var, true)
 
 //-----------------------------------------------------------------------------
-template<class T>
-inline void PrintVar( const char* a_VarName, const T& a_Value, bool a_SameLine = false )
+template <class T>
+inline void PrintVar(const char *a_VarName, const T &a_Value, bool a_SameLine = false)
 {
     std::stringstream l_StringStream;
     l_StringStream << a_VarName << " = " << a_Value;
-    if( !a_SameLine ) l_StringStream << std::endl;
-    OutputDebugStringA( l_StringStream.str().c_str() );
+    if (!a_SameLine)
+        l_StringStream << std::endl;
+    OutputDebugStringA(l_StringStream.str().c_str());
 }
 
 //-----------------------------------------------------------------------------
-size_t FindSize( const byte* a_Code, size_t a_MaxBytes = 1024 )
+size_t FindSize(const byte *a_Code, size_t a_MaxBytes = 1024)
 {
     size_t matchSize = dummyEnd.size();
 
-    for( size_t i = 0; i < a_MaxBytes; ++i )
+    for (size_t i = 0; i < a_MaxBytes; ++i)
     {
         int j = 0;
-        for( j = 0; j < matchSize; ++j )
+        for (j = 0; j < matchSize; ++j)
         {
-            if( a_Code[i+j] != dummyEnd[j] )
+            if (a_Code[i + j] != dummyEnd[j])
                 break;
         }
 
-        if( j == matchSize )
+        if (j == matchSize)
             return i;
     }
-    
+
     return 0;
 }
 
 //-----------------------------------------------------------------------------
-std::vector<size_t> FindOffsets( const byte* a_Code, size_t a_NumOffsets, const std::vector<byte> & a_Identifier, size_t a_MaxBytes = 1024 )
+std::vector<size_t> FindOffsets(const byte *a_Code, size_t a_NumOffsets, const std::vector<byte> &a_Identifier, size_t a_MaxBytes = 1024)
 {
     size_t matchSize = a_Identifier.size();
     std::vector<size_t> offsets;
 
-    for( size_t i = 0; i < a_MaxBytes; ++i )
+    for (size_t i = 0; i < a_MaxBytes; ++i)
     {
         int j = 0;
-        for( j = 0; j < matchSize; ++j )
+        for (j = 0; j < matchSize; ++j)
         {
-            if( a_Code[i + j] != a_Identifier[j] )
+            if (a_Code[i + j] != a_Identifier[j])
                 break;
         }
 
-        if( j == matchSize )
+        if (j == matchSize)
         {
             offsets.push_back(i);
             i += matchSize;
-            if( offsets.size() == a_NumOffsets )
+            if (offsets.size() == a_NumOffsets)
                 break;
         }
     }
@@ -125,21 +131,21 @@ std::vector<size_t> FindOffsets( const byte* a_Code, size_t a_NumOffsets, const 
 //-----------------------------------------------------------------------------
 void OrbitProlog::Init()
 {
-    if( m_Data.m_Code == nullptr )
+    if (m_Data.m_Code == nullptr)
     {
-        m_Data.m_Code = (byte*)&OrbitPrologAsm;
-        m_Data.m_Size = FindSize( m_Data.m_Code );
-        PRINT_VARN( "PrologSize", m_Data.m_Size );
-        
-        std::vector<size_t> offsets = FindOffsets( m_Data.m_Code, Prolog_NumOffsets, dummyAddress );
-        
-        if( offsets.size() != Prolog_NumOffsets )
+        m_Data.m_Code = (byte *)&OrbitPrologAsm;
+        m_Data.m_Size = FindSize(m_Data.m_Code);
+        PRINT_VARN("PrologSize", m_Data.m_Size);
+
+        std::vector<size_t> offsets = FindOffsets(m_Data.m_Code, Prolog_NumOffsets, dummyAddress);
+
+        if (offsets.size() != Prolog_NumOffsets)
         {
-            OutputDebugStringA( "OrbitAsm: Did not find expected number of offsets in the Prolog\n" );
+            OutputDebugStringA("OrbitAsm: Did not find expected number of offsets in the Prolog\n");
             return;
         }
 
-        for( size_t i = 0; i < offsets.size(); ++i )
+        for (size_t i = 0; i < offsets.size(); ++i)
         {
             m_Data.m_Offsets[i] = offsets[i];
         }
@@ -149,21 +155,21 @@ void OrbitProlog::Init()
 //-----------------------------------------------------------------------------
 void OrbitEpilog::Init()
 {
-    if( !m_Data.m_Code )
+    if (!m_Data.m_Code)
     {
-        m_Data.m_Code = (byte*)&OrbitEpilogAsm;
-        m_Data.m_Size = FindSize( m_Data.m_Code );
-        PRINT_VARN( "EpilogSize", m_Data.m_Size );
+        m_Data.m_Code = (byte *)&OrbitEpilogAsm;
+        m_Data.m_Size = FindSize(m_Data.m_Code);
+        PRINT_VARN("EpilogSize", m_Data.m_Size);
 
-        std::vector<size_t> offsets = FindOffsets( m_Data.m_Code, Epilog_NumOffsets, dummyAddress );
+        std::vector<size_t> offsets = FindOffsets(m_Data.m_Code, Epilog_NumOffsets, dummyAddress);
 
-        if( offsets.size() != Epilog_NumOffsets )
+        if (offsets.size() != Epilog_NumOffsets)
         {
-            OutputDebugStringA( "OrbitAsm: Did not find expected number of offsets in the Epilog\n" );
+            OutputDebugStringA("OrbitAsm: Did not find expected number of offsets in the Epilog\n");
             return;
         }
-        
-        for( int i = 0; i < Epilog_NumOffsets; ++i )
+
+        for (int i = 0; i < Epilog_NumOffsets; ++i)
         {
             m_Data.m_Offsets[i] = offsets[i];
         }
@@ -171,32 +177,43 @@ void OrbitEpilog::Init()
 }
 
 //-----------------------------------------------------------------------------
-const Prolog* GetOrbitProlog()
+const Prolog *GetOrbitProlog()
 {
-    if( !GProlog.m_Data.m_Code )
+    if (!GProlog.m_Data.m_Code)
         GProlog.Init();
     return &GProlog.m_Data;
 }
 
 //-----------------------------------------------------------------------------
-const Epilog* GetOrbitEpilog()
+const Epilog *GetOrbitEpilog()
 {
-    if( !GEpilog.m_Data.m_Code )
+    if (!GEpilog.m_Data.m_Code)
         GEpilog.Init();
     return &GEpilog.m_Data;
 }
 
-void* GetOrbitPrologStubAddress() {
+void *GetOrbitPrologStubAddress()
+{
     return &UserPrologStub;
 }
-void* GetOrbitEpilogStubAddress() {
+void *GetOrbitEpilogStubAddress()
+{
     return &UserEpilogStub;
+}
+
+void *GetOrbitPrologAsmStubAddress()
+{
+    return &OrbitPrologAsmFixed;
+}
+void *GetOrbitEpilogAsmStubAddress()
+{
+    return &OrbitEpilogAsm;
 }
 
 #ifndef _WIN64
 
 //-----------------------------------------------------------------------------
-__declspec( naked ) void OrbitPrologAsm()
+__declspec(naked) void OrbitPrologAsm()
 {
     __asm
     {
@@ -213,14 +230,14 @@ __declspec( naked ) void OrbitPrologAsm()
         movdqu xmmword ptr[esp+0],  xmm3
 
         sub     ebp, esp
-        push    ebp                         // Pass in size of context
+        push    ebp // Pass in size of context
         lea     eax, [esp-8]
-        push    eax                         // Pass in context
-        mov     ecx, 0x12345678             // Pass in address of original function
+        push    eax // Pass in context
+        mov     ecx, 0x12345678 // Pass in address of original function
         push    ecx
-        mov     eax, 0x12345678             // Set address of user prolog
-        call    eax                         // Call user prolog
-        add     esp, 12                     // Clear args from stack frame
+        mov     eax, 0x12345678 // Set address of user prolog
+        call    eax // Call user prolog
+        add     esp, 12 // Clear args from stack frame
 
         movdqu xmm3, xmmword ptr[esp+0]
         movdqu xmm2, xmmword ptr[esp+16]
@@ -233,30 +250,30 @@ __declspec( naked ) void OrbitPrologAsm()
         pop     eax
         pop     ebp
 
-        mov     dword ptr[esp], 0x12345678  // Overwrite return address with address of OrbitEpilog
-        mov     eax, 0x12345678             // Address of trampoline to original function
-        jmp     eax                         // Jump to trampoline to original function
-        mov     eax, 0x0FFFFFFF             // Dummy function delimiter, never executed
+        mov     dword ptr[esp], 0x12345678 // Overwrite return address with address of OrbitEpilog
+        mov     eax, 0x12345678 // Address of trampoline to original function
+        jmp     eax // Jump to trampoline to original function
+        mov     eax, 0x0FFFFFFF // Dummy function delimiter, never executed
     }
 }
 
 //-----------------------------------------------------------------------------
-__declspec( naked ) void OrbitEpilogAsm()
+__declspec(naked) void OrbitEpilogAsm()
 {
     __asm
     {
-        push    eax                    // Save eax (return value)
+        push    eax // Save eax (return value)
         sub     esp, 16
         movdqu xmmword ptr[ESP], xmm0; // Save XMM0 (float return value)
         mov     ecx, 0x12345678
-        call    ecx                    // Call user epilog (returns original caller address)
-        mov     edx, eax               // edx contains caller address
+        call    ecx // Call user epilog (returns original caller address)
+        mov     edx, eax // edx contains caller address
         movdqu xmm0, xmmword ptr[ESP]; // XMM0 contains float return value
         add     ESP, 16
-        pop     eax                    // eax contains return value
-        push    edx                    // Push caller address on stack
+        pop     eax // eax contains return value
+        push    edx // Push caller address on stack
         ret
-        mov     eax, 0x0FFFFFFF        // Dummy function delimiter, never executed
+        mov     eax, 0x0FFFFFFF // Dummy function delimiter, never executed
     }
 }
 
