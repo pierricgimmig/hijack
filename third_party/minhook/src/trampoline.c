@@ -587,28 +587,6 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     memcpy(pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size);
     memcpy(&pEpilog[orbitEpilog->m_Offsets[Epilog_EpilogData]], &pEpilogData, sizeof(LPVOID));
 
-    /*memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_TrampolineResumeAddress]], &ct->pTrampoline, sizeof(LPVOID));
-    memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_OrbitStub]], &prolog_stub, sizeof(LPVOID));
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_Data]], &prolog_stub, sizeof(LPVOID));
-    memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_EpilogAddress]], &pEpilog, sizeof(LPVOID));*/
-
-    // New approach
-    //
-    // PrologData
-    // - address of asm prolog stub
-    // - address of C prolog stub
-    // - address of epilog stub
-    // - address of trampoline for return instruction (minhook)
-    //
-    /*struct PrologData {
-        void* asm_prolog_stub;
-        void* c_prolog_stub;
-        void* asm_epilog_stub;
-        void* tramploline_to_original_function;
-    };*/
-
-    // [ PrologData, EpilogData, PrologAsm, EpilogAsm ]
-
 #ifdef _M_X64
     ct->pRelay = pProlog;
 #else
