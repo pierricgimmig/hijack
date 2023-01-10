@@ -30,12 +30,22 @@ struct PrologData
     void* c_prolog_stub;
     void* asm_epilog_stub;
     void* tramploline_to_original_function;
+    void* original_function;
+    void* user_callback;
+};
+
+struct EpilogData
+{
+    void* asm_epilog_stub;
+    void* c_prolog_stub;
+    void* original_function;
+    void* user_callback;
 };
 
 //-----------------------------------------------------------------------------
 enum OrbitEpilogOffset
 {
-    Epilog_CallbackAddress = 0,
+    Epilog_EpilogData = 0,
     Epilog_NumOffsets
 };
 

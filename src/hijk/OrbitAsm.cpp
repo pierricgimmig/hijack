@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include <iostream>
+#include "hijk/hijk.h"
 
 OrbitProlog GProlog;
 OrbitEpilog GEpilog;
@@ -29,17 +30,20 @@ struct ContextScope
     OrbitSSEContext sse_context_;
 };
 
-void UserPrologStub(void *prolog_data, void **address_of_return_address)
+void UserPrologStub(PrologData *prolog_data, void **address_of_return_address)
 {
     ContextScope context_scope;
     // prolog_data: original_address, user_callback
-
+    //typedef void (*PrologueCallback)(void* original_function, struct PrologueContext* prologue_context);
     std::cout << "Prolog!\n";
     return_addresses.push_back(*address_of_return_address);
     ++g_prolog_count;
+
+    PrologueCallback user_callback = static_cast<PrologueCallback>(prolog_data->user_callback);
+    user_callback(prolog_data->original_function, nullptr);
 }
 
-void UserEpilogStub(void *epilog_data, void **address_of_return_address)
+void UserEpilogStub(EpilogData *epilog_data, void **address_of_return_address)
 {
     ContextScope context_scope;
 
@@ -51,8 +55,11 @@ void UserEpilogStub(void *epilog_data, void **address_of_return_address)
     void *return_address = return_addresses.back();
     return_addresses.pop_back();
     *address_of_return_address = return_address;
-
     ++g_epilog_count;
+
+    //typedef void (*EpilogueCallback)(void* original_function, struct EpilogueContext* epilogue_context);
+    EpilogueCallback user_callback = static_cast<EpilogueCallback>(epilog_data->user_callback);
+    user_callback(epilog_data->original_function, nullptr);
 }
 
 //-----------------------------------------------------------------------------
@@ -207,7 +214,7 @@ void *GetOrbitPrologAsmStubAddress()
 }
 void *GetOrbitEpilogAsmStubAddress()
 {
-    return &OrbitEpilogAsm;
+    return &OrbitEpilogAsmFixed;
 }
 
 #ifndef _WIN64

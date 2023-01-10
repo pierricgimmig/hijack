@@ -53,6 +53,7 @@ extern "C" void HijkGetCurrentThreadContext(void *a_Context);
 extern "C" void HijkSetCurrentThreadContext(void *a_Context);
 extern "C" void OrbitPrologAsm();
 extern "C" void OrbitPrologAsmFixed();
+extern "C" void OrbitEpilogAsmFixed();
 extern "C" void OrbitPrologOnlyAsm();
 extern "C" void OrbitEpilogAsm();
 #else

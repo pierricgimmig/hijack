@@ -23,42 +23,7 @@
 ; XMM5, YMM5    Volatile        Must be preserved as needed by caller; sixth vector-type argument when __vectorcall is used
 ; XMM6:XMM15, YMM6:YMM15        Nonvolatile (XMM), Volatile (upper half of YMM) Must be preserved as needed by callee. YMM registers must be preserved as needed by caller.
 
-OrbitPrologAsmOld PROC
-    sub     RSP, 8                  ;// will hold address of trampoline for return instruction
-    push    RBP                     
-    mov     RBP, RSP
-    
-    push    RAX                     ;// Save volatile registers
-    push    RCX
-    push    RDX
-    push    R8
-    push    R9
-
-    mov     RAX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog stub
-    mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog data
-    mov     RDX, 0123456789ABCDEFh  ;// will be overwritten with address of trampoline for ret instruction
-    mov     R8,  RSP                ;// saved registers address on the stack
-    mov     qword ptr[RBP+8], RDX   ;// Write address of trampoline for ret instruction
-    lea     RDX, [RBP+16]
-
-    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
-    call    RAX                     ;// User prolog function  
-    add     RSP, 20h
-
-    mov     RDX,  0123456789ABCDEFh  ;// will be overwritten with address of epilog stub
-    mov     qword ptr[RBP+16], RDX  ;// Write address of epilog stub in place of original return address
-    
-    pop     R9
-    pop     R8
-    pop     RDX
-    pop     RCX                     ;// restore volatile registers
-    pop     RAX
-
-    pop     RBP
-    ret                             ;// Jump to orignial function through trampoline
-    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitPrologAsmOld  ENDP
-
+; 
 OrbitPrologAsm PROC
     sub     RSP, 8                  ;// will hold address of trampoline to original function
     push    RCX
@@ -67,18 +32,17 @@ OrbitPrologAsm PROC
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
 OrbitPrologAsm ENDP
 OrbitPrologAsmFixed PROC
-    ; Note: RCX contains prolog data
     push    RBP                     
     mov     RBP, RSP
     push    RDX
     
     mov     RDX, qword ptr[RCX+24]
-    mov     qword ptr[RBP+16], RDX   ;// qword ptr[RCX+24]       ;// original
+    mov     qword ptr[RBP+16], RDX  ;// original
 
-    lea     RDX, [RBP+24]           ;// address of return address
+    lea     RDX, [RBP+24]           ;// address of return address. Note that RCX contains prolog_data.
     push    RCX                     ;// preserve prolog_data
 
-    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)            
+    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point      
     call    qword ptr[RCX+8]        ;// User prolog function  
     add     RSP, 20h
 
@@ -93,40 +57,29 @@ OrbitPrologAsmFixed PROC
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
 OrbitPrologAsmFixed  ENDP
 
-OrbitEpilogAsm PROC  
-    sub     RSP, 8                  ;// will hold caller address
-    push    RBP                     
-    mov     RBP, RSP
-    push    RAX                     ;// Save volatile registers
+OrbitEpilogAsm PROC
+    sub     RSP, 8                  ;// will hold original caller address
     push    RCX
-    push    RDX
-    push    R8
-    push    R9
-    push    R10
-    push    R11
-
-    sub     RSP, 28h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
-
-    mov     RAX, 0123456789ABCDEFh  ;// Will be ovewritten with orbit epilogue stub address
-    mov     RCX, 0 ;// Will be ovewritten with orbit epilogue data
-    mov     RDX, RBP
-    add     RDX, 8
-    call    RAX                     ;// User prolog function  
-
-    add     RSP, 28h
-
-    pop     R11                     ;// restore volatil registers
-    pop     R10
-    pop     R9
-    pop     R8
-    pop     RDX
-    pop     RCX
-    pop     RAX
-
-    pop     RBP
-    ret                             ;// Jump to caller through trampoline
+    mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of epilog data
+    jmp     qword ptr[RCX+0]        ;// jump to asm epilog (OrbitEpilogAsmFixed)
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
 OrbitEpilogAsm ENDP
+OrbitEpilogAsmFixed PROC  
+    push    RBP                     
+    mov     RBP, RSP
+    push    RDX
+    lea     RDX, [RBP+16]           ;// address of original caller address. Note that RCX contains prolog_data.
+
+    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
+    call    qword ptr[RCX+8]        ;// User epilog function  
+    add     RSP, 20h
+
+    pop     RDX
+    pop     RBP
+    pop     RCX
+    ret                             ;// Jump to caller through trampoline
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+OrbitEpilogAsmFixed ENDP
 
 OrbitGetSSEContext PROC
 movdqu xmmword ptr[RCX+0*16],  xmm0

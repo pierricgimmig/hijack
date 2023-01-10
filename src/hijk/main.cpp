@@ -12,11 +12,11 @@ __declspec(noinline) void MyFunction(int a, float b) {
 
 extern "C" {
     void Prologue(void* original_function, struct PrologueContext* prologue_context) {
-        std::cout << "Prologue!\n";
+        std::cout << "User Prologue!\n";
     }
     void Epilogue(void* original_function, struct EpilogueContext* epilogue_context) {
         ++g_count;
-        std::cout << "Epilogue!\n";
+        std::cout << "UserEpilogue!\n";
     }
 }
 
