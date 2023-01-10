@@ -9,7 +9,7 @@
 //-----------------------------------------------------------------------------
 struct OrbitProlog
 {
-    OrbitProlog() { memset(this, 0, sizeof(OrbitProlog)); }
+    OrbitProlog(){ memset( this, 0, sizeof( OrbitProlog ) ); }
     void Init();
     Prolog m_Data;
 };
@@ -17,7 +17,7 @@ struct OrbitProlog
 //-----------------------------------------------------------------------------
 struct OrbitEpilog
 {
-    OrbitEpilog() { memset(this, 0, sizeof(OrbitEpilog)); }
+    OrbitEpilog(){ memset( this, 0, sizeof( OrbitEpilog ) ); }
     void Init();
     Epilog m_Data;
 };

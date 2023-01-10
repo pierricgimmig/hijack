@@ -93,7 +93,7 @@ typedef struct _TRAMPOLINE
     LPVOID pDetour;         // [In] Address of the detour function.
     LPVOID pTrampoline;     // [In] Buffer address for the trampoline and relay function.
     LPVOID pPrologCallback;       // [In] Prolog user callback function.
-    LPVOID pEpilogCallback;       // [In] Epilog callback function.
+    LPVOID pEpilogCallback;       // [In] Epilog user callback function.
     LPVOID pReturnAddressCb;      // [In] GetReturnAddress function (returns thread local buffered return address)
 
 #ifdef _M_X64

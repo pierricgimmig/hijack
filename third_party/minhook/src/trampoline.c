@@ -32,7 +32,7 @@
 #include <assert.h>
 
 #ifndef ARRAYSIZE
-#define ARRAYSIZE(A) (sizeof(A) / sizeof((A)[0]))
+    #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))
 #endif
 
 #ifdef _M_X64
@@ -91,36 +91,36 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     };
 #else
     CALL_REL call = {
-        0xE8,      // E8 xxxxxxxx: CALL +5+xxxxxxxx
-        0x00000000 // Relative destination address
+        0xE8,                   // E8 xxxxxxxx: CALL +5+xxxxxxxx
+        0x00000000              // Relative destination address
     };
     JMP_REL jmp = {
-        0xE9,      // E9 xxxxxxxx: JMP +5+xxxxxxxx
-        0x00000000 // Relative destination address
+        0xE9,                   // E9 xxxxxxxx: JMP +5+xxxxxxxx
+        0x00000000              // Relative destination address
     };
     JCC_REL jcc = {
-        0x0F, 0x80, // 0F8* xxxxxxxx: J** +6+xxxxxxxx
-        0x00000000  // Relative destination address
+        0x0F, 0x80,             // 0F8* xxxxxxxx: J** +6+xxxxxxxx
+        0x00000000              // Relative destination address
     };
 #endif
 
-    UINT8 oldPos = 0;
-    UINT8 newPos = 0;
-    ULONG_PTR jmpDest = 0; // Destination address of an internal jump.
-    BOOL finished = FALSE; // Is the function completed?
+    UINT8     oldPos   = 0;
+    UINT8     newPos   = 0;
+    ULONG_PTR jmpDest  = 0;     // Destination address of an internal jump.
+    BOOL      finished = FALSE; // Is the function completed?
 #ifdef _M_X64
-    UINT8 instBuf[16];
+    UINT8     instBuf[16];
 #endif
 
     ct->patchAbove = FALSE;
-    ct->nIP = 0;
+    ct->nIP        = 0;
 
     do
     {
-        HDE hs;
-        UINT copySize;
-        LPVOID pCopySrc;
-        ULONG_PTR pOldInst = (ULONG_PTR)ct->pTarget + oldPos;
+        HDE       hs;
+        UINT      copySize;
+        LPVOID    pCopySrc;
+        ULONG_PTR pOldInst = (ULONG_PTR)ct->pTarget     + oldPos;
         ULONG_PTR pNewInst = (ULONG_PTR)ct->pTrampoline + newPos;
 
         copySize = HDE_DISASM((LPVOID)pOldInst, &hs);
@@ -160,7 +160,8 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
             // Relative address is stored at (instruction length - immediate value length - 4).
             pRelAddr = (PUINT32)(instBuf + hs.len - ((hs.flags & 0x3C) >> 2) - 4);
-            *pRelAddr = (UINT32)((pOldInst + hs.len + (INT32)hs.disp.disp32) - (pNewInst + hs.len));
+            *pRelAddr
+                = (UINT32)((pOldInst + hs.len + (INT32)hs.disp.disp32) - (pNewInst + hs.len));
 
             // Complete the function if JMP (FF /4).
             if (hs.opcode == 0xFF && hs.modrm_reg == 4)
@@ -190,7 +191,8 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
                 dest += (INT32)hs.imm.imm32;
 
             // Simply copy an internal jump.
-            if ((ULONG_PTR)ct->pTarget <= dest && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
+            if ((ULONG_PTR)ct->pTarget <= dest
+                && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
             {
                 if (jmpDest < dest)
                     jmpDest = dest;
@@ -209,19 +211,22 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
                 finished = (pOldInst >= jmpDest);
             }
         }
-        else if ((hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0 || (hs.opcode2 & 0xF0) == 0x80)
+        else if ((hs.opcode & 0xF0) == 0x70
+            || (hs.opcode & 0xFC) == 0xE0
+            || (hs.opcode2 & 0xF0) == 0x80)
         {
             // Direct relative Jcc
             ULONG_PTR dest = pOldInst + hs.len;
 
-            if ((hs.opcode & 0xF0) == 0x70     // Jcc
-                || (hs.opcode & 0xFC) == 0xE0) // LOOPNZ/LOOPZ/LOOP/JECXZ
+            if ((hs.opcode & 0xF0) == 0x70      // Jcc
+                || (hs.opcode & 0xFC) == 0xE0)  // LOOPNZ/LOOPZ/LOOP/JECXZ
                 dest += (INT8)hs.imm.imm8;
             else
                 dest += (INT32)hs.imm.imm32;
 
             // Simply copy an internal jump.
-            if ((ULONG_PTR)ct->pTarget <= dest && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
+            if ((ULONG_PTR)ct->pTarget <= dest
+                && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
             {
                 if (jmpDest < dest)
                     jmpDest = dest;
@@ -236,7 +241,7 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
                 UINT8 cond = ((hs.opcode != 0x0F ? hs.opcode : hs.opcode2) & 0x0F);
 #ifdef _M_X64
                 // Invert the condition in x64 mode to simplify the conditional jump logic.
-                jcc.opcode = 0x71 ^ cond;
+                jcc.opcode  = 0x71 ^ cond;
                 jcc.address = dest;
 #else
                 jcc.opcode1 = 0x80 | cond;
@@ -278,13 +283,16 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 #endif
         newPos += copySize;
         oldPos += hs.len;
-    } while (!finished);
+    }
+    while (!finished);
 
     // Is there enough place for a long jump?
-    if (oldPos < sizeof(JMP_REL) && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL) - oldPos))
+    if (oldPos < sizeof(JMP_REL)
+        && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL) - oldPos))
     {
         // Is there enough place for a short jump?
-        if (oldPos < sizeof(JMP_REL_SHORT) && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL_SHORT) - oldPos))
+        if (oldPos < sizeof(JMP_REL_SHORT)
+            && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL_SHORT) - oldPos))
         {
             return FALSE;
         }
@@ -331,25 +339,25 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     };
 #else
     CALL_REL call = {
-        0xE8,      // E8 xxxxxxxx: CALL +5+xxxxxxxx
-        0x00000000 // Relative destination address
+        0xE8,                   // E8 xxxxxxxx: CALL +5+xxxxxxxx
+        0x00000000              // Relative destination address
     };
     JMP_REL jmp = {
-        0xE9,      // E9 xxxxxxxx: JMP +5+xxxxxxxx
-        0x00000000 // Relative destination address
+        0xE9,                   // E9 xxxxxxxx: JMP +5+xxxxxxxx
+        0x00000000              // Relative destination address
     };
     JCC_REL jcc = {
-        0x0F, 0x80, // 0F8* xxxxxxxx: J** +6+xxxxxxxx
-        0x00000000  // Relative destination address
+        0x0F, 0x80,             // 0F8* xxxxxxxx: J** +6+xxxxxxxx
+        0x00000000              // Relative destination address
     };
 #endif
 
-    UINT8 oldPos = 0;
-    UINT8 newPos = 0;
-    ULONG_PTR jmpDest = 0; // Destination address of an internal jump.
-    BOOL finished = FALSE; // Is the function completed?
+    UINT8     oldPos = 0;
+    UINT8     newPos = 0;
+    ULONG_PTR jmpDest = 0;     // Destination address of an internal jump.
+    BOOL      finished = FALSE; // Is the function completed?
 #ifdef _M_X64
-    UINT8 instBuf[16];
+    UINT8     instBuf[16];
 #endif
 
     ct->patchAbove = FALSE;
@@ -357,9 +365,9 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
 
     do
     {
-        HDE hs;
-        UINT copySize;
-        LPVOID pCopySrc;
+        HDE       hs;
+        UINT      copySize;
+        LPVOID    pCopySrc;
         ULONG_PTR pOldInst = (ULONG_PTR)ct->pTarget + oldPos;
         ULONG_PTR pNewInst = (ULONG_PTR)ct->pTrampoline + newPos;
 
@@ -400,7 +408,8 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
 
             // Relative address is stored at (instruction length - immediate value length - 4).
             pRelAddr = (PUINT32)(instBuf + hs.len - ((hs.flags & 0x3C) >> 2) - 4);
-            *pRelAddr = (UINT32)((pOldInst + hs.len + (INT32)hs.disp.disp32) - (pNewInst + hs.len));
+            *pRelAddr
+                = (UINT32)((pOldInst + hs.len + (INT32)hs.disp.disp32) - (pNewInst + hs.len));
 
             // Complete the function if JMP (FF /4).
             if (hs.opcode == 0xFF && hs.modrm_reg == 4)
@@ -430,7 +439,8 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
                 dest += (INT32)hs.imm.imm32;
 
             // Simply copy an internal jump.
-            if ((ULONG_PTR)ct->pTarget <= dest && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
+            if ((ULONG_PTR)ct->pTarget <= dest
+                && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
             {
                 if (jmpDest < dest)
                     jmpDest = dest;
@@ -449,19 +459,22 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
                 finished = (pOldInst >= jmpDest);
             }
         }
-        else if ((hs.opcode & 0xF0) == 0x70 || (hs.opcode & 0xFC) == 0xE0 || (hs.opcode2 & 0xF0) == 0x80)
+        else if ((hs.opcode & 0xF0) == 0x70
+            || (hs.opcode & 0xFC) == 0xE0
+            || (hs.opcode2 & 0xF0) == 0x80)
         {
             // Direct relative Jcc
             ULONG_PTR dest = pOldInst + hs.len;
 
-            if ((hs.opcode & 0xF0) == 0x70     // Jcc
-                || (hs.opcode & 0xFC) == 0xE0) // LOOPNZ/LOOPZ/LOOP/JECXZ
+            if ((hs.opcode & 0xF0) == 0x70      // Jcc
+                || (hs.opcode & 0xFC) == 0xE0)  // LOOPNZ/LOOPZ/LOOP/JECXZ
                 dest += (INT8)hs.imm.imm8;
             else
                 dest += (INT32)hs.imm.imm32;
 
             // Simply copy an internal jump.
-            if ((ULONG_PTR)ct->pTarget <= dest && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
+            if ((ULONG_PTR)ct->pTarget <= dest
+                && dest < ((ULONG_PTR)ct->pTarget + sizeof(JMP_REL)))
             {
                 if (jmpDest < dest)
                     jmpDest = dest;
@@ -499,7 +512,7 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
             return FALSE;
 
         // Trampoline function is too large.
-        if ((newPos + copySize) > TRAMPOLINE_MAX_SIZE)
+        if( ( newPos + copySize ) > TRAMPOLINE_MAX_SIZE )
         {
             assert(0);
             return FALSE;
@@ -524,10 +537,12 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     } while (!finished);
 
     // Is there enough place for a long jump?
-    if (oldPos < sizeof(JMP_REL) && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL) - oldPos))
+    if (oldPos < sizeof(JMP_REL)
+        && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL) - oldPos))
     {
         // Is there enough place for a short jump?
-        if (oldPos < sizeof(JMP_REL_SHORT) && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL_SHORT) - oldPos))
+        if (oldPos < sizeof(JMP_REL_SHORT)
+            && !IsCodePadding((LPBYTE)ct->pTarget + oldPos, sizeof(JMP_REL_SHORT) - oldPos))
         {
             return FALSE;
         }
@@ -542,8 +557,8 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
         ct->patchAbove = TRUE;
     }
 
-    const struct Prolog *orbitProlog = GetOrbitProlog();
-    const struct Epilog *orbitEpilog = GetOrbitEpilog();
+    const struct Prolog* orbitProlog = GetOrbitProlog();
+    const struct Epilog* orbitEpilog = GetOrbitEpilog();
 
     size_t prolog_size = orbitProlog->m_Size;
     size_t epilog_size = orbitEpilog->m_Size;
@@ -568,7 +583,7 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     prolog_data.asm_prolog_stub = GetOrbitPrologAsmStubAddress();
     prolog_data.c_prolog_stub = GetOrbitPrologStubAddress();
     prolog_data.asm_epilog_stub = pEpilog;
-    prolog_data.tramploline_to_original_function = ct->pTrampoline;
+    prolog_data.tramploline_to_original_function =   ct->pTrampoline;
     prolog_data.original_function = ct->pTarget;
     prolog_data.user_callback = ct->pPrologCallback;
 
