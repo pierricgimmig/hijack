@@ -23,157 +23,63 @@
 ; XMM5, YMM5    Volatile        Must be preserved as needed by caller; sixth vector-type argument when __vectorcall is used
 ; XMM6:XMM15, YMM6:YMM15        Nonvolatile (XMM), Volatile (upper half of YMM) Must be preserved as needed by callee. YMM registers must be preserved as needed by caller.
 
+; 
 OrbitPrologAsm PROC
-    sub     RSP, 8                  ;// will hold address of trampoline
+    sub     RSP, 8                  ;// will hold address of trampoline to original function
+    push    RCX
+    mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog data
+    jmp     qword ptr[RCX+0]        ;// jump to asm prolog (OrbitPrologAsmFixed)
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+OrbitPrologAsm ENDP
+OrbitPrologAsmFixed PROC
     push    RBP                     
     mov     RBP, RSP
-    
-    push    RAX                     ;// Save volatile registers
-    push    RCX
     push    RDX
-    push    R8
-    push    R9
-    push    R10
-    push    R11
+    
+    mov     RDX, qword ptr[RCX+24]
+    mov     qword ptr[RBP+16], RDX  ;// original
 
-    sub     RSP, 100h               ;// will hold xmm registers
-    mov     RCX, RSP
-    mov     RAX, OrbitGetSSEContext
-    call    RAX
+    lea     RDX, [RBP+24]           ;// address of return address. Note that RCX contains prolog_data.
+    push    RCX                     ;// preserve prolog_data
 
-    mov     RDX, RSP                ;// pointer to context structure
-    mov     R8,  RBP                ;// compute size of context for sanity check
-    sub     R8,  RSP
-
-    sub     RSP, 20h                ;// Shadow space - NOTE: stack pointer needs to be aligned on 16 bytes at this point                
-
-                                    ;// CALL USER PROLOG - void Prolog( void* a_OriginalFunctionAddress, void* a_Context, unsigned a_ContextSize );
-    mov     RCX, 0123456789ABCDEFh  ;// Pass in address of original function
-    mov     RAX, 0123456789ABCDEFh  ;// Will be ovewritten with callback address
-    call    RAX                     ;// User prolog function  
-
+    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point      
+    call    qword ptr[RCX+8]        ;// User prolog function  
     add     RSP, 20h
 
-    mov     RCX, RSP                ;// Restore xmm registers
-    mov     RAX, OrbitSetSSEContext
-    call    RAX
-    add     RSP, 100h
-                                    ;// OVERWRITE RETURN ADDRESS
-    mov     R10, 0123456789ABCDEFh  ;// will be overwritten with epilog address
-    mov     qword ptr[RBP+16], R10  ;// overwrite return address with epilog address
-
-
-    mov     R11, 0123456789ABCDEFh  ;// Will be ovewritten with address of trampoline to original function
-    mov     qword ptr[RBP+8], R11   ;// Write address of trampoline for ret instruction
-
-    pop     R11
-    pop     R10
-    pop     R9
-    pop     R8
-    pop     RDX
     pop     RCX
-    pop     RAX
+    mov     RDX, qword ptr[RCX+16]
+    mov     qword ptr[RBP+24], RDX  ;// Overwrite original return address with epilog stub address
 
-    pop     RBP
-    ret                             ;// Jump to orignial function through trampoline
-    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitPrologAsm  ENDP
-
-OrbitPrologOnlyAsm PROC
-    sub     RSP, 8                  ;// will hold address of trampoline
-    push    RBP                     
-    mov     RBP, RSP
-    
-    push    RAX                     ;// Save volatile registers
-    push    RCX
-    push    RDX
-    push    R8
-    push    R9
-    push    R10
-    push    R11
-
-    sub     RSP, 100h               ;// will hold xmm registers
-    mov     RCX, RSP
-    mov     RAX, OrbitGetSSEContext
-    call    RAX
-
-    mov     RDX, RSP                ;// pointer to context structure
-    mov     R8,  RBP                ;// compute size of context for sanity check
-    sub     R8,  RSP
-
-    sub     RSP, 20h                ;// Shadow space - NOTE: stack pointer needs to be aligned on 16 bytes at this point                
-
-                                    ;// CALL USER PROLOG - void Prolog( void* a_OriginalFunctionAddress, void* a_Context, unsigned a_ContextSize );
-    mov     RCX, 0123456789ABCDEFh  ;// Pass in address of original function
-    mov     RAX, 0123456789ABCDEFh  ;// Will be ovewritten with callback address
-    call    RAX                     ;// User prolog function  
-
-    add     RSP, 20h
-
-    mov     RCX, RSP                ;// Restore xmm registers
-    mov     RAX, OrbitSetSSEContext
-    call    RAX
-    add     RSP, 100h
-                                    ;// OVERWRITE RETURN ADDRESS
-    mov     R10, 0123456789ABCDEFh  ;// will be overwritten with epilog address
-    ;// mov     qword ptr[RBP+16], R10  ;// overwrite return address with epilog address
-
-
-    mov     R11, 0123456789ABCDEFh  ;// Will be ovewritten with address of trampoline to original function
-    mov     qword ptr[RBP+8], R11   ;// Write address of trampoline for ret instruction
-
-    pop     R11
-    pop     R10
-    pop     R9
-    pop     R8
     pop     RDX
-    pop     RCX
-    pop     RAX
-
     pop     RBP
-    ret                             ;// Jump to orignial function through trampoline
+    pop     RCX                     ;// from stub above
+    ret                             ;// return to original
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitPrologOnlyAsm  ENDP
-
+OrbitPrologAsmFixed  ENDP
 
 OrbitEpilogAsm PROC
-    push    RAX                     ;// Save RAX (return value)
-    push    RBX
+    sub     RSP, 8                  ;// will hold original caller address
     push    RCX
-    push    RDX
-    push    R8
-    push    R9
-    sub     RSP , 16                
-    movdqu  xmmword ptr[RSP], xmm0  ;// Save XMM0 (float return value)
-    mov     R11, 0123456789ABCDEFh  ;// Will be overwritten by callback address
-
-    sub     RSP, 100h               ;// will hold xmm registers
-    mov     RCX, RSP
-    mov     RAX, OrbitGetSSEContext
-    call    RAX
-
-    sub     RSP, 20h                 
-    call    R11                     ;// Call user epilog (returns original caller address)
-    add     RSP, 20h                 
-
-    mov     RCX, RSP                ;// Restore xmm registers
-    mov     R11, OrbitSetSSEContext
-    call    R11
-    add     RSP, 100h
-
-    mov     R11, RAX                ;// RDX contains return address
-    movdqu  xmm0, xmmword ptr[RSP]  ;// XMM0 contains float return value
-    add     RSP , 16                
-    pop     R9
-    pop     R8
-    pop     RDX
-    pop     RCX
-    pop     RBX
-    pop     RAX                     ;// RAX contains return value
-    push    R11                     ;// Push caller address on stack
-    ret                             ;// return
+    mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of epilog data
+    jmp     qword ptr[RCX+0]        ;// jump to asm epilog (OrbitEpilogAsmFixed)
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
 OrbitEpilogAsm ENDP
+OrbitEpilogAsmFixed PROC  
+    push    RBP                     
+    mov     RBP, RSP
+    push    RDX
+    lea     RDX, [RBP+16]           ;// address of original caller address. Note that RCX contains prolog_data.
+
+    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
+    call    qword ptr[RCX+8]        ;// User epilog function  
+    add     RSP, 20h
+
+    pop     RDX
+    pop     RBP
+    pop     RCX
+    ret                             ;// Jump to caller through trampoline
+    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
+OrbitEpilogAsmFixed ENDP
 
 OrbitGetSSEContext PROC
 movdqu xmmword ptr[RCX+0*16],  xmm0
@@ -214,5 +120,45 @@ movdqu xmm14, xmmword ptr[RCX+14*16]
 movdqu xmm15, xmmword ptr[RCX+15*16]
 ret
 OrbitSetSSEContext ENDP
+
+HijkGetCurrentThreadContext PROC
+mov qword ptr[RCX+0*8],  RAX
+mov qword ptr[RCX+1*8],  RCX
+mov qword ptr[RCX+2*8],  RDX
+mov qword ptr[RCX+3*8],  RBX
+mov qword ptr[RCX+4*8],  RSP
+mov qword ptr[RCX+5*8],  RBP
+mov qword ptr[RCX+6*8],  RSI
+mov qword ptr[RCX+7*8],  RDI
+mov qword ptr[RCX+8*8],  R8
+mov qword ptr[RCX+9*8],  R9
+mov qword ptr[RCX+10*8], R10
+mov qword ptr[RCX+11*8], R11
+mov qword ptr[RCX+12*8], R12
+mov qword ptr[RCX+13*8], R13
+mov qword ptr[RCX+14*8], R14
+mov qword ptr[RCX+15*8], R15
+ret
+HijkGetCurrentThreadContext ENDP
+
+HijkSetCurrentThreadContext PROC
+mov RAX, qword ptr[RCX+0*8] 
+mov RCX, qword ptr[RCX+1*8] 
+mov RDX, qword ptr[RCX+2*8] 
+mov RBX, qword ptr[RCX+3*8] 
+mov RSP, qword ptr[RCX+4*8] 
+mov RBP, qword ptr[RCX+5*8] 
+mov RSI, qword ptr[RCX+6*8] 
+mov RDI, qword ptr[RCX+7*8] 
+mov R8,  qword ptr[RCX+8*8] 
+mov R9,  qword ptr[RCX+9*8] 
+mov R10, qword ptr[RCX+10*8] 
+mov R11, qword ptr[RCX+11*8] 
+mov R12, qword ptr[RCX+12*8] 
+mov R13, qword ptr[RCX+13*8] 
+mov R14, qword ptr[RCX+14*8] 
+mov R15, qword ptr[RCX+15*8] 
+ret
+HijkSetCurrentThreadContext ENDP
 
 END

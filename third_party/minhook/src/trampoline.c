@@ -36,13 +36,13 @@
 #endif
 
 #ifdef _M_X64
-    #include "./hde/hde64.h"
-    typedef hde64s HDE;
-    #define HDE_DISASM(code, hs) hde64_disasm(code, hs)
+#include "./hde/hde64.h"
+typedef hde64s HDE;
+#define HDE_DISASM(code, hs) hde64_disasm(code, hs)
 #else
-    #include "./hde/hde32.h"
-    typedef hde32s HDE;
-    #define HDE_DISASM(code, hs) hde32_disasm(code, hs)
+#include "./hde/hde32.h"
+typedef hde32s HDE;
+#define HDE_DISASM(code, hs) hde32_disasm(code, hs)
 #endif
 
 #include "trampoline.h"
@@ -50,9 +50,9 @@
 
 // Maximum size of a trampoline function.
 #ifdef _M_X64
-    #define TRAMPOLINE_MAX_SIZE (MEMORY_SLOT_SIZE - sizeof(JMP_ABS))
+#define TRAMPOLINE_MAX_SIZE (MEMORY_SLOT_SIZE - sizeof(JMP_ABS))
 #else
-    #define TRAMPOLINE_MAX_SIZE MEMORY_SLOT_SIZE
+#define TRAMPOLINE_MAX_SIZE MEMORY_SLOT_SIZE
 #endif
 
 //-------------------------------------------------------------------------
@@ -560,25 +560,47 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     const struct Prolog* orbitProlog = GetOrbitProlog();
     const struct Epilog* orbitEpilog = GetOrbitEpilog();
 
+    size_t prolog_size = orbitProlog->m_Size;
+    size_t epilog_size = orbitEpilog->m_Size;
+    size_t prolog_data_size = sizeof(struct PrologData);
+    size_t epilog_data_size = sizeof(struct EpilogData);
+
     LPBYTE pProlog = (LPBYTE)ct->pTrampoline + newPos;
-    LPBYTE pEpilog = pProlog + orbitProlog->m_Size;
+    LPBYTE pEpilog = pProlog + prolog_size;
+    LPBYTE pPrologData = pEpilog + epilog_size;
+    LPBYTE pEpilogData = pPrologData + prolog_data_size;
 
     // Trampoline function is too large.
-    if( ( newPos + orbitProlog->m_Size + orbitEpilog->m_Size ) > TRAMPOLINE_MAX_SIZE )
+    if ((newPos + prolog_size + epilog_size + prolog_data_size + epilog_data_size) > TRAMPOLINE_MAX_SIZE)
     {
         assert(0);
     }
 
-    // Create OrbitProlog
-    memcpy( pProlog, orbitProlog->m_Code, orbitProlog->m_Size );
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalFunction]],&ct->pTarget,          sizeof(LPVOID) );
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_CallbackAddress]], &ct->pPrologCallback,  sizeof(LPVOID) );
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_OriginalAddress]], &ct->pTrampoline,      sizeof(LPVOID) );
-    memcpy( &pProlog[orbitProlog->m_Offsets[Prolog_EpilogAddress]],   &pEpilog,              sizeof(LPVOID) );
+    void *prolog_stub = GetOrbitPrologStubAddress();
+    void *epilog_stub = GetOrbitEpilogStubAddress();
 
+    struct PrologData prolog_data;
+    prolog_data.asm_prolog_stub = GetOrbitPrologAsmStubAddress();
+    prolog_data.c_prolog_stub = GetOrbitPrologStubAddress();
+    prolog_data.asm_epilog_stub = pEpilog;
+    prolog_data.tramploline_to_original_function =   ct->pTrampoline;
+    prolog_data.original_function = ct->pTarget;
+    prolog_data.user_callback = ct->pPrologCallback;
+
+    // Create OrbitProlog
+    memcpy(pPrologData, &prolog_data, prolog_data_size);
+    memcpy(pProlog, orbitProlog->m_Code, orbitProlog->m_Size);
+    memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_Data]], &pPrologData, sizeof(LPVOID));
+
+    struct EpilogData epilog_data;
+    epilog_data.asm_epilog_stub = GetOrbitEpilogAsmStubAddress();
+    epilog_data.c_prolog_stub = GetOrbitEpilogStubAddress();
+    epilog_data.original_function = ct->pTarget;
+    epilog_data.user_callback = ct->pEpilogCallback;
     // Create OrbitEpilog
-    memcpy( pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size );
-    memcpy( &pEpilog[orbitEpilog->m_Offsets[Epilog_CallbackAddress]], &ct->pEpilogCallback,  sizeof(LPVOID) );
+    memcpy(pEpilogData, &epilog_data, epilog_data_size);
+    memcpy(pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size);
+    memcpy(&pEpilog[orbitEpilog->m_Offsets[Epilog_EpilogData]], &pEpilogData, sizeof(LPVOID));
 
 #ifdef _M_X64
     ct->pRelay = pProlog;

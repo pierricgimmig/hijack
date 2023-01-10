@@ -8,7 +8,7 @@ set(HEADERS
     include/hijk/hijk.h
 )
 
-set(SOURCES 
+set(SOURCES
     Orbit.asm
     OrbitAsm.cpp
     hijk.cpp
@@ -33,17 +33,19 @@ set(MINHOOK_FILES
     ${MINHOOK_DIR}/src/trampoline.c
 )
 
-source_group("HDE"          FILES ${HDE_FILES})
-source_group("MinHook"      FILES ${MINHOOK_FILES})
+source_group("HDE" FILES ${HDE_FILES})
+source_group("MinHook" FILES ${MINHOOK_FILES})
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
 
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /INCREMENTAL:NO" )
+# TODO: those are not working, we need to manually disable incremental linking after cmake generation.
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEBUG /INCREMENTAL:NO")
+set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG /INCREMENTAL:NO")
 
-add_library(hijk SHARED 
-	${SOURCES} 
-    ${HEADERS} 
-    ${HDE_FILES} 
+add_library(hijk SHARED
+    ${SOURCES}
+    ${HEADERS}
+    ${HDE_FILES}
     ${MINHOOK_FILES}
 )
 
@@ -53,7 +55,7 @@ target_include_directories(hijk PRIVATE
     ${CMAKE_SOURCE_DIR}/src/hijk
 )
 
-target_include_directories(hijk PUBLIC 
+target_include_directories(hijk PUBLIC
     "include"
 )
 

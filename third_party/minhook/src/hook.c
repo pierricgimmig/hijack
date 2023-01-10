@@ -633,7 +633,7 @@ MH_STATUS WINAPI MH_CreateHook(LPVOID pTarget, LPVOID pDetour, LPVOID *ppOrigina
 
 //-------------------------------------------------------------------------
 MH_STATUS WINAPI MH_Orbit_CreateHookPrologOnly(LPVOID pTarget, LPVOID pPrologCallback){
- MH_STATUS status = MH_OK;
+    MH_STATUS status = MH_OK;
 
     EnterSpinLock();
 
