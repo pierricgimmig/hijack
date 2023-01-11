@@ -1,6 +1,6 @@
 ﻿/*
  *  MinHook - The Minimalistic API Hooking Library for x64/x86
- *  Copyright (C) 2009-2015 Tsuda Kageyu.
+ *  Copyright (C) 2009-2017 Tsuda Kageyu.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,11 @@
 #pragma once
 
 // Size of each memory slot.
-#define MEMORY_SLOT_SIZE 256
+#if defined(_M_X64) || defined(__x86_64__)
+    #define MEMORY_SLOT_SIZE 256
+#else
+    #define MEMORY_SLOT_SIZE 32
+#endif
 
 VOID   InitializeBuffer(VOID);
 VOID   UninitializeBuffer(VOID);
