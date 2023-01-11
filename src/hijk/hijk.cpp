@@ -24,7 +24,6 @@ const MinHookInitializer& GetMinHookInitializer() {
 	return initializer;
 }
 
-//-----------------------------------------------------------------------------
 void* GetReturnAddress()
 {
   assert(0);

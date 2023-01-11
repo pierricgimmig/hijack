@@ -1,13 +1,11 @@
 #pragma once
 
-//-----------------------------------------------------------------------------
 enum OrbitPrologOffset
 {
     Prolog_Data = 0,
     Prolog_NumOffsets
 };
 
-//-----------------------------------------------------------------------------
 struct Prolog
 {
     byte *m_Code;
@@ -33,14 +31,12 @@ struct EpilogData
     void *user_callback;
 };
 
-//-----------------------------------------------------------------------------
 enum OrbitEpilogOffset
 {
     Epilog_EpilogData = 0,
     Epilog_NumOffsets
 };
 
-//-----------------------------------------------------------------------------
 struct Epilog
 {
     byte *m_Code;
@@ -48,7 +44,6 @@ struct Epilog
     size_t m_Offsets[Epilog_NumOffsets];
 };
 
-//-----------------------------------------------------------------------------
 #ifdef __cplusplus
 extern "C"
 {
@@ -57,8 +52,8 @@ extern "C"
     const struct Epilog *GetOrbitEpilog();
     void *GetOrbitPrologStubAddress();
     void *GetOrbitEpilogStubAddress();
-    void *GetOrbitPrologAsmStubAddress();
-    void *GetOrbitEpilogAsmStubAddress();
+    void *GetHijkPrologAsmStubAddress();
+    void *GetHijkEpilogAsmStubAddress();
 #ifdef __cplusplus
 }
 #endif
