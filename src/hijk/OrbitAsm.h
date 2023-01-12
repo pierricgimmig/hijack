@@ -5,6 +5,7 @@
 
 #include <windows.h>
 #include "OrbitAsmC.h"
+#include <stdint.h>
 
 struct OrbitProlog
 {
@@ -23,7 +24,7 @@ struct OrbitEpilog
 #pragma pack(push, 1)
 struct HijkIntegerRegisters
 {
-
+    uint64_t regs[16];
 };
 struct HijkXmmRegisters
 {
