@@ -9,7 +9,7 @@ set(HEADERS
 )
 
 set(SOURCES
-    Orbit.asm
+    hijk.asm
     OrbitAsm.cpp
     hijk.cpp
 )

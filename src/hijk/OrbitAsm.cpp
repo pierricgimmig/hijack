@@ -17,17 +17,17 @@ struct ContextScope
     ContextScope()
     {
         HijkGetIntegerRegisters(&context_);
-        HijkGetXmmRegisters(&sse_context_);
+        HijkGetXmmRegisters(&xmm_registers_);
     }
 
     ~ContextScope()
     {
         HijkSetIntegerRegisters(&context_);
-        HijkSetXmmRegisters(&sse_context_);
+        HijkSetXmmRegisters(&xmm_registers_);
     }
 
     uint64_t context_[16];
-    HijkXmmRegisters sse_context_;
+    HijkXmmRegisters xmm_registers_;
 };
 
 void UserPrologStub(PrologData *prolog_data, void **address_of_return_address)

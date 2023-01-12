@@ -21,6 +21,10 @@ struct OrbitEpilog
 };
 
 #pragma pack(push, 1)
+struct HijkIntegerRegisters
+{
+
+};
 struct HijkXmmRegisters
 {
     _M128A xmm0;
