@@ -24,14 +24,14 @@
 ; XMM6:XMM15, YMM6:YMM15        Nonvolatile (XMM), Volatile (upper half of YMM) Must be preserved as needed by callee. YMM registers must be preserved as needed by caller.
 
 ; 
-OrbitPrologAsm PROC
+HijkPrologAsm PROC
     sub     RSP, 8                  ;// will hold address of trampoline to original function
     push    RCX
     mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of prolog data
-    jmp     qword ptr[RCX+0]        ;// jump to asm prolog (OrbitPrologAsmFixed)
+    jmp     qword ptr[RCX+0]        ;// jump to asm prolog (HijkPrologAsmFixed)
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitPrologAsm ENDP
-OrbitPrologAsmFixed PROC
+HijkPrologAsm ENDP
+HijkPrologAsmFixed PROC
     push    RBP                     
     mov     RBP, RSP
     push    RDX
@@ -54,23 +54,22 @@ OrbitPrologAsmFixed PROC
     pop     RBP
     pop     RCX                     ;// from stub above
     ret                             ;// return to original
-    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitPrologAsmFixed  ENDP
+HijkPrologAsmFixed  ENDP
 
-OrbitEpilogAsm PROC
+HijkEpilogAsm PROC
     sub     RSP, 8                  ;// will hold original caller address
     push    RCX
     mov     RCX, 0123456789ABCDEFh  ;// will be overwritten with address of epilog data
-    jmp     qword ptr[RCX+0]        ;// jump to asm epilog (OrbitEpilogAsmFixed)
+    jmp     qword ptr[RCX+0]        ;// jump to asm epilog (HijkEpilogAsmFixed)
     mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitEpilogAsm ENDP
-OrbitEpilogAsmFixed PROC  
+HijkEpilogAsm ENDP
+HijkEpilogAsmFixed PROC  
     push    RBP                     
     mov     RBP, RSP
     push    RDX
     lea     RDX, [RBP+16]           ;// address of original caller address. Note that RCX contains prolog_data.
 
-    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point (+0x8)               
+    sub     RSP, 20h                ;// Shadow space (0x20) - NOTE: stack pointer needs to be aligned on 16 bytes at this point            
     call    qword ptr[RCX+8]        ;// User epilog function  
     add     RSP, 20h
 
@@ -78,10 +77,9 @@ OrbitEpilogAsmFixed PROC
     pop     RBP
     pop     RCX
     ret                             ;// Jump to caller through trampoline
-    mov     R11, 0FFFFFFFFFFFFFFFh  ;// Dummy function delimiter, never executed
-OrbitEpilogAsmFixed ENDP
+HijkEpilogAsmFixed ENDP
 
-OrbitGetSSEContext PROC
+HijkGetXmmRegisters PROC
 movdqu xmmword ptr[RCX+0*16],  xmm0
 movdqu xmmword ptr[RCX+1*16],  xmm1
 movdqu xmmword ptr[RCX+2*16],  xmm2
@@ -99,9 +97,9 @@ movdqu xmmword ptr[RCX+13*16], xmm13
 movdqu xmmword ptr[RCX+14*16], xmm14
 movdqu xmmword ptr[RCX+15*16], xmm15
 ret
-OrbitGetSSEContext ENDP
+HijkGetXmmRegisters ENDP
 
-OrbitSetSSEContext PROC
+HijkSetXmmRegisters PROC
 movdqu xmm0,  xmmword ptr[RCX+0*16]
 movdqu xmm1,  xmmword ptr[RCX+1*16]
 movdqu xmm2,  xmmword ptr[RCX+2*16]
@@ -119,17 +117,17 @@ movdqu xmm13, xmmword ptr[RCX+13*16]
 movdqu xmm14, xmmword ptr[RCX+14*16]
 movdqu xmm15, xmmword ptr[RCX+15*16]
 ret
-OrbitSetSSEContext ENDP
+HijkSetXmmRegisters ENDP
 
-HijkGetCurrentThreadContext PROC
+HijkGetIntegerRegisters PROC
 mov qword ptr[RCX+0*8],  RAX
+mov qword ptr[RCX+3*8],  RBX
 mov qword ptr[RCX+1*8],  RCX
 mov qword ptr[RCX+2*8],  RDX
-mov qword ptr[RCX+3*8],  RBX
-mov qword ptr[RCX+4*8],  RSP
-mov qword ptr[RCX+5*8],  RBP
 mov qword ptr[RCX+6*8],  RSI
 mov qword ptr[RCX+7*8],  RDI
+mov qword ptr[RCX+5*8],  RBP
+mov qword ptr[RCX+4*8],  RSP
 mov qword ptr[RCX+8*8],  R8
 mov qword ptr[RCX+9*8],  R9
 mov qword ptr[RCX+10*8], R10
@@ -139,17 +137,17 @@ mov qword ptr[RCX+13*8], R13
 mov qword ptr[RCX+14*8], R14
 mov qword ptr[RCX+15*8], R15
 ret
-HijkGetCurrentThreadContext ENDP
+HijkGetIntegerRegisters ENDP
 
-HijkSetCurrentThreadContext PROC
+HijkSetIntegerRegisters PROC
 mov RAX, qword ptr[RCX+0*8] 
-mov RCX, qword ptr[RCX+1*8] 
-mov RDX, qword ptr[RCX+2*8] 
-mov RBX, qword ptr[RCX+3*8] 
-mov RSP, qword ptr[RCX+4*8] 
-mov RBP, qword ptr[RCX+5*8] 
-mov RSI, qword ptr[RCX+6*8] 
-mov RDI, qword ptr[RCX+7*8] 
+mov RBX, qword ptr[RCX+1*8] 
+mov RCX, qword ptr[RCX+2*8] 
+mov RDX, qword ptr[RCX+3*8] 
+mov RSI, qword ptr[RCX+4*8] 
+mov RDI, qword ptr[RCX+5*8] 
+;mov RBP, qword ptr[RCX+6*8] 
+;mov RSP, qword ptr[RCX+7*8] 
 mov R8,  qword ptr[RCX+8*8] 
 mov R9,  qword ptr[RCX+9*8] 
 mov R10, qword ptr[RCX+10*8] 
@@ -159,6 +157,6 @@ mov R13, qword ptr[RCX+13*8]
 mov R14, qword ptr[RCX+14*8] 
 mov R15, qword ptr[RCX+15*8] 
 ret
-HijkSetCurrentThreadContext ENDP
+HijkSetIntegerRegisters ENDP
 
 END

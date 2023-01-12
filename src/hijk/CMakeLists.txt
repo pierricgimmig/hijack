@@ -9,7 +9,7 @@ set(HEADERS
 )
 
 set(SOURCES
-    Orbit.asm
+    hijk.asm
     OrbitAsm.cpp
     hijk.cpp
 )
@@ -59,5 +59,9 @@ target_include_directories(hijk PUBLIC
     "include"
 )
 
+# Disable incremental linking
+set_target_properties(hijk PROPERTIES LINK_FLAGS "/INCREMENTAL:NO")
+
 add_executable(hijk_example main.cpp)
 target_link_libraries(hijk_example hijk)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT hijk_example)

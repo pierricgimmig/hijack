@@ -6,9 +6,6 @@
 extern "C" {
 #endif
 
-	typedef void (*PrologueCallback)(void* original_function, struct PrologueContext* prologue_context);
-	typedef void (*EpilogueCallback)(void* original_function, struct EpilogueContext* epilogue_context);
-
 	typedef enum
 	{
 		kUnknown = -1,
@@ -19,6 +16,8 @@ extern "C" {
 	} Hijk_Status;
 
 	// Dynamically instrument `target_function` and call prologue/epilogue callbacks on `target_function` entry/exit.
+	typedef void (*PrologueCallback)(void* original_function, struct PrologueContext* prologue_context);
+	typedef void (*EpilogueCallback)(void* original_function, struct EpilogueContext* epilogue_context);
 	HIJK_API Hijk_Status Hijk_CreateHook(void* target_function, PrologueCallback prologue_callback, EpilogueCallback epilogue_callback);
 
 	HIJK_API Hijk_Status Hijk_RemoveHook(void* target_function);

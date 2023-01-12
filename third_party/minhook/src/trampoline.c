@@ -581,7 +581,7 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     void *epilog_stub = GetOrbitEpilogStubAddress();
 
     struct PrologData prolog_data;
-    prolog_data.asm_prolog_stub = GetOrbitPrologAsmStubAddress();
+    prolog_data.asm_prolog_stub = GetHijkPrologAsmStubAddress();
     prolog_data.c_prolog_stub = GetOrbitPrologStubAddress();
     prolog_data.asm_epilog_stub = pEpilog;
     prolog_data.tramploline_to_original_function =   ct->pTrampoline;
@@ -594,7 +594,7 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
     memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_Data]], &pPrologData, sizeof(LPVOID));
 
     struct EpilogData epilog_data;
-    epilog_data.asm_epilog_stub = GetOrbitEpilogAsmStubAddress();
+    epilog_data.asm_epilog_stub = GetHijkEpilogAsmStubAddress();
     epilog_data.c_prolog_stub = GetOrbitEpilogStubAddress();
     epilog_data.original_function = ct->pTarget;
     epilog_data.user_callback = ct->pEpilogCallback;

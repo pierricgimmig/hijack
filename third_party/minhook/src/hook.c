@@ -1080,5 +1080,5 @@ MH_STATUS WINAPI MH_DisableAllHooks(VOID)
 }
 
 
-extern void OrbitPrologAsm();
-extern void OrbitEpilogAsm();
+extern void HijkPrologAsm();
+extern void HijkEpilogAsm();

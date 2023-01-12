@@ -5,8 +5,8 @@
 
 #include <windows.h>
 #include "OrbitAsmC.h"
+#include <stdint.h>
 
-//-----------------------------------------------------------------------------
 struct OrbitProlog
 {
     OrbitProlog(){ memset( this, 0, sizeof( OrbitProlog ) ); }
@@ -14,7 +14,6 @@ struct OrbitProlog
     Prolog m_Data;
 };
 
-//-----------------------------------------------------------------------------
 struct OrbitEpilog
 {
     OrbitEpilog(){ memset( this, 0, sizeof( OrbitEpilog ) ); }
@@ -23,8 +22,11 @@ struct OrbitEpilog
 };
 
 #pragma pack(push, 1)
-//-----------------------------------------------------------------------------
-struct OrbitSSEContext
+struct HijkIntegerRegisters
+{
+    uint64_t regs[16];
+};
+struct HijkXmmRegisters
 {
     _M128A xmm0;
     _M128A xmm1;
@@ -45,18 +47,11 @@ struct OrbitSSEContext
 };
 #pragma pack(pop)
 
-#ifdef _WIN64
-//-----------------------------------------------------------------------------
-extern "C" void OrbitGetSSEContext(OrbitSSEContext *a_Context);
-extern "C" void OrbitSetSSEContext(OrbitSSEContext *a_Context);
-extern "C" void HijkGetCurrentThreadContext(void *a_Context);
-extern "C" void HijkSetCurrentThreadContext(void *a_Context);
-extern "C" void OrbitPrologAsm();
-extern "C" void OrbitPrologAsmFixed();
-extern "C" void OrbitEpilogAsmFixed();
-extern "C" void OrbitEpilogAsm();
-#else
-//-----------------------------------------------------------------------------
-void OrbitPrologAsm();
-void OrbitEpilogAsm();
-#endif
+extern "C" void HijkGetXmmRegisters(HijkXmmRegisters *a_Context);
+extern "C" void HijkSetXmmRegisters(HijkXmmRegisters *a_Context);
+extern "C" void HijkGetIntegerRegisters(void *a_Context);
+extern "C" void HijkSetIntegerRegisters(void *a_Context);
+extern "C" void HijkPrologAsm();
+extern "C" void HijkPrologAsmFixed();
+extern "C" void HijkEpilogAsmFixed();
+extern "C" void HijkEpilogAsm();
