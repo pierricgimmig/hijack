@@ -16,17 +16,17 @@ struct ContextScope
 {
     ContextScope()
     {
-        HijkGetIntegerRegisters(&context_);
+        HijkGetIntegerRegisters(&integer_registers_);
         HijkGetXmmRegisters(&xmm_registers_);
     }
 
     ~ContextScope()
     {
-        HijkSetIntegerRegisters(&context_);
+        HijkSetIntegerRegisters(&integer_registers_);
         HijkSetXmmRegisters(&xmm_registers_);
     }
 
-    uint64_t context_[16];
+    HijkIntegerRegisters integer_registers_;
     HijkXmmRegisters xmm_registers_;
 };
 
