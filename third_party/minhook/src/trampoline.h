@@ -92,8 +92,6 @@ typedef struct _TRAMPOLINE
     LPVOID pTarget;         // [In] Address of the target function.
     LPVOID pDetour;         // [In] Address of the detour function.
     LPVOID pTrampoline;     // [In] Buffer address for the trampoline and relay function.
-    LPVOID pPrologCallback;       // [In] Prolog user callback function.
-    LPVOID pEpilogCallback;       // [In] Epilog user callback function.
 
 #if defined(_M_X64) || defined(__x86_64__)
     LPVOID pRelay;          // [Out] Address of the relay function.
@@ -104,11 +102,13 @@ typedef struct _TRAMPOLINE
     UINT8  newIPs[8];       // [Out] Instruction boundaries of the trampoline function.
 } TRAMPOLINE, *PTRAMPOLINE;
 
+
+BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
 
 // Allow user to specify a callback to be called after trampoline creation.
 typedef void* trampolineOverrideCallback(PTRAMPOLINE ct, void* free_space, UINT size);

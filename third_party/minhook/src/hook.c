@@ -287,7 +287,7 @@ static BOOL EnumerateThreads(PFROZEN_THREADS pThreads)
                         {
                             succeeded = FALSE;
                             break;
-                    }
+                        }
                     }
                     else if (pThreads->size >= pThreads->capacity)
                     {
@@ -443,18 +443,18 @@ static MH_STATUS EnableAllHooksLL(BOOL enable)
         status = Freeze(&threads, ALL_HOOKS_POS, enable ? ACTION_ENABLE : ACTION_DISABLE);
         if (status == MH_OK)
         {
-        for (i = first; i < g_hooks.size; ++i)
-        {
-            if (g_hooks.pItems[i].isEnabled != enable)
+            for (i = first; i < g_hooks.size; ++i)
             {
-                status = EnableHookLL(i, enable);
-                if (status != MH_OK)
-                    break;
+                if (g_hooks.pItems[i].isEnabled != enable)
+                {
+                    status = EnableHookLL(i, enable);
+                    if (status != MH_OK)
+                        break;
+                }
             }
-        }
 
-        Unfreeze(&threads);
-    }
+            Unfreeze(&threads);
+        }
     }
 
     return status;
@@ -675,9 +675,9 @@ MH_STATUS WINAPI MH_RemoveHook(LPVOID pTarget)
                 status = Freeze(&threads, pos, ACTION_DISABLE);
                 if (status == MH_OK)
                 {
-                status = EnableHookLL(pos, FALSE);
+                    status = EnableHookLL(pos, FALSE);
 
-                Unfreeze(&threads);
+                    Unfreeze(&threads);
                 }
             }
 
@@ -726,9 +726,9 @@ static MH_STATUS EnableHook(LPVOID pTarget, BOOL enable)
                     status = Freeze(&threads, pos, ACTION_ENABLE);
                     if (status == MH_OK)
                     {
-                    status = EnableHookLL(pos, enable);
+                        status = EnableHookLL(pos, enable);
 
-                    Unfreeze(&threads);
+                        Unfreeze(&threads);
                     }
                 }
                 else
@@ -839,18 +839,18 @@ MH_STATUS WINAPI MH_ApplyQueued(VOID)
             status = Freeze(&threads, ALL_HOOKS_POS, ACTION_APPLY_QUEUED);
             if (status == MH_OK)
             {
-            for (i = first; i < g_hooks.size; ++i)
-            {
-                PHOOK_ENTRY pHook = &g_hooks.pItems[i];
-                if (pHook->isEnabled != pHook->queueEnable)
+                for (i = first; i < g_hooks.size; ++i)
                 {
-                    status = EnableHookLL(i, pHook->queueEnable);
-                    if (status != MH_OK)
-                        break;
+                    PHOOK_ENTRY pHook = &g_hooks.pItems[i];
+                    if (pHook->isEnabled != pHook->queueEnable)
+                    {
+                        status = EnableHookLL(i, pHook->queueEnable);
+                        if (status != MH_OK)
+                            break;
+                    }
                 }
-            }
 
-            Unfreeze(&threads);
+                Unfreeze(&threads);
             }
         }
     }
@@ -921,67 +921,3 @@ const char * WINAPI MH_StatusToString(MH_STATUS status)
 
     return "(unknown)";
 }
-
-//-------------------------------------------------------------------------
-MH_STATUS MH_EnableHooks( DWORD64* pTargets, UINT numTargets, BOOL enable )
-{
-    MH_STATUS status = MH_OK;
-    if( numTargets == 0 )
-    {
-        return status;
-    }
-
-    EnterSpinLock();
-
-    if( g_hHeap != NULL )
-    {
-        FROZEN_THREADS threads;
-        Freeze( &threads, ALL_HOOKS_POS, enable ? ACTION_ENABLE : ACTION_DISABLE );
-
-        for( UINT i = 0; i < numTargets; ++i )
-        {
-            UINT pos = FindHookEntry( (LPVOID)pTargets[i] );
-            if( pos != INVALID_HOOK_POS )
-            {
-                if( g_hooks.pItems[pos].isEnabled != enable )
-                {
-                    status = EnableHookLL( pos, enable );
-                }
-                else
-                {
-                    status = enable ? MH_ERROR_ENABLED : MH_ERROR_DISABLED;
-                }
-            }
-            else
-            {
-                status = MH_ERROR_NOT_CREATED;
-            }
-        }
-
-        Unfreeze( &threads );
-    }
-    else
-    {
-        status = MH_ERROR_NOT_INITIALIZED;
-    }
-
-    LeaveSpinLock();
-
-    return status;
-}
-
-//-------------------------------------------------------------------------
-MH_STATUS WINAPI MH_DisableAllHooks(VOID)
-{
-    UINT i;
-    for (i = 0; i < g_hooks.size; ++i)
-    {
-        MH_QueueDisableHook( g_hooks.pItems[i].pTarget );
-    }
-
-    return MH_ApplyQueued();
-}
-
-
-extern void HijkPrologAsm();
-extern void HijkEpilogAsm();

@@ -180,31 +180,6 @@ extern "C" {
     // Translates the MH_STATUS to its name as a string.
     const char * WINAPI MH_StatusToString(MH_STATUS status);
 
-    // Enables already created hooks.
-    // Parameters:
-    //   pTarget [in] An array of pointers to the target functions.
-    //   numTargets:  Number of functions
-    //   enable:      Enable/Disable
-    MH_STATUS MH_EnableHooks( DWORD64* pTargets, UINT numTargets, BOOL enable );
-
-    // @CodeHook: Disables all hooks
-    MH_STATUS WINAPI MH_DisableAllHooks(VOID);
-
-    // Test asm function
-    void WINAPI MH_Test();
-
-    // Creates a Hook for the specified API function, in disabled state.
-    // Parameters:
-    //   pszModule  [in]  A pointer to the loaded module name which contains the
-    //                    target function.
-    //   pszTarget  [in]  A pointer to the target function name, which will be
-    //                    overridden by the detour function.
-    //   pDetour    [in]  A pointer to the detour function, which will override
-    //                    the target function.
-    //   ppOriginal [out] A pointer to the trampoline function, which will be
-    //                    used to call the original target function.
-    //                    This parameter can be NULL.
-
 #ifdef __cplusplus
 }
 #endif
