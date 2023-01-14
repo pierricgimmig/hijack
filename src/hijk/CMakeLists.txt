@@ -3,13 +3,11 @@ enable_language(ASM_MASM)
 set(MINHOOK_DIR ${CMAKE_SOURCE_DIR}/third_party/minhook)
 
 set(HEADERS
-    OrbitAsm.h
     include/hijk/hijk.h
 )
 
 set(SOURCES
     hijk.asm
-    OrbitAsm.cpp
     hijk.cpp
 )
 
