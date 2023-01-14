@@ -49,6 +49,11 @@ typedef hde32s HDE;
 #include "trampoline.h"
 #include "buffer.h"
 
+trampolineOverrideCallback* g_trampolineOverrideCallback;
+void SetTrampolineOverrideCallback(trampolineOverrideCallback* callback) {
+    g_trampolineOverrideCallback = callback;
+}
+
 // Maximum size of a trampoline function.
 #if defined(_M_X64) || defined(__x86_64__)
 #define TRAMPOLINE_MAX_SIZE (MEMORY_SLOT_SIZE - sizeof(JMP_ABS))
@@ -319,9 +324,6 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     return TRUE;
 }
 
-#include "OrbitAsmC.h"
-#include <assert.h>
-
 //-------------------------------------------------------------------------
 BOOL CreatePrologFunction(PTRAMPOLINE ct)
 {
@@ -558,56 +560,17 @@ BOOL CreatePrologFunction(PTRAMPOLINE ct)
         ct->patchAbove = TRUE;
     }
 
-    const struct Prolog* orbitProlog = GetOrbitProlog();
-    const struct Epilog* orbitEpilog = GetOrbitEpilog();
-
-    size_t prolog_size = orbitProlog->m_Size;
-    size_t epilog_size = orbitEpilog->m_Size;
-    size_t prolog_data_size = sizeof(struct PrologData);
-    size_t epilog_data_size = sizeof(struct EpilogData);
-
-    LPBYTE pProlog = (LPBYTE)ct->pTrampoline + newPos;
-    LPBYTE pEpilog = pProlog + prolog_size;
-    LPBYTE pPrologData = pEpilog + epilog_size;
-    LPBYTE pEpilogData = pPrologData + prolog_data_size;
-
-    // Trampoline function is too large.
-    if ((newPos + prolog_size + epilog_size + prolog_data_size + epilog_data_size) > TRAMPOLINE_MAX_SIZE)
-    {
-        assert(0);
-    }
-
-    void *prolog_stub = GetOrbitPrologStubAddress();
-    void *epilog_stub = GetOrbitEpilogStubAddress();
-
-    struct PrologData prolog_data;
-    prolog_data.asm_prolog_stub = GetHijkPrologAsmStubAddress();
-    prolog_data.c_prolog_stub = GetOrbitPrologStubAddress();
-    prolog_data.asm_epilog_stub = pEpilog;
-    prolog_data.tramploline_to_original_function =   ct->pTrampoline;
-    prolog_data.original_function = ct->pTarget;
-    prolog_data.user_callback = ct->pPrologCallback;
-
-    // Create OrbitProlog
-    memcpy(pPrologData, &prolog_data, prolog_data_size);
-    memcpy(pProlog, orbitProlog->m_Code, orbitProlog->m_Size);
-    memcpy(&pProlog[orbitProlog->m_Offsets[Prolog_Data]], &pPrologData, sizeof(LPVOID));
-
-    struct EpilogData epilog_data;
-    epilog_data.asm_epilog_stub = GetHijkEpilogAsmStubAddress();
-    epilog_data.c_prolog_stub = GetOrbitEpilogStubAddress();
-    epilog_data.original_function = ct->pTarget;
-    epilog_data.user_callback = ct->pEpilogCallback;
-    // Create OrbitEpilog
-    memcpy(pEpilogData, &epilog_data, epilog_data_size);
-    memcpy(pEpilog, orbitEpilog->m_Code, orbitEpilog->m_Size);
-    memcpy(&pEpilog[orbitEpilog->m_Offsets[Epilog_EpilogData]], &pEpilogData, sizeof(LPVOID));
-
 #ifdef _M_X64
-    ct->pRelay = pProlog;
+    ct->pRelay = NULL;
 #else
-    ct->pDetour = pProlog;
+    ct->pDetour = NULL;
 #endif
+
+    if (g_trampolineOverrideCallback) {
+        void* free_space = (LPBYTE)ct->pTrampoline + newPos;
+        UINT free_space_size = TRAMPOLINE_MAX_SIZE - newPos;
+        ct->pRelay = g_trampolineOverrideCallback(ct, free_space, free_space_size);
+    }
 
     return TRUE;
 }

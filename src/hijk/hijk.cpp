@@ -1,13 +1,22 @@
 #include "hijk/hijk.h"
 #include "MinHook.h"
+#include "trampoline.h"
+#include "OrbitAsm.h"
+#include <iostream>
 
 #include <assert.h>
+
+extern "C" void* OnTrampolineCreated(PTRAMPOLINE ct, void* relay_buffer, UINT relay_buffer_size) {
+	std::cout << "Trampoline created with " << relay_buffer_size << " free space";
+	return WritePrologAndEpilogForTargetFunction(ct->pTarget, ct->pTrampoline, relay_buffer, relay_buffer_size);
+}
 
 struct MinHookInitializer {
 	MinHookInitializer() {
 		if (MH_Initialize() == MH_OK) {
 			init_status = Hijk_Status::kOk;
 		}
+		SetTrampolineOverrideCallback(&OnTrampolineCreated);
 	}
 
 	~MinHookInitializer() {
@@ -40,11 +49,13 @@ Hijk_Status Hijk_CreateHook(void* target_function, PrologueCallback prologue_cal
 
 	return Hijk_Status::kOk;
 }
+
 Hijk_Status Hijk_RemoveHook(void* target_function) {
 	if (!GetMinHookInitializer().Ok()) return Hijk_Status::kInernalInitializationError;
 
 	return Hijk_Status::kOk;
 }
+
 Hijk_Status Hijk_RemoveAllHooks() { return Hijk_Status::kOk; }
 
 Hijk_Status Hijk_EnableHook(void* target_function) {
@@ -52,10 +63,12 @@ Hijk_Status Hijk_EnableHook(void* target_function) {
 	return MH_EnableHook(target_function) == MH_OK ? Hijk_Status::kOk : Hijk_Status::kUnknown;
 	return Hijk_Status::kOk;
 }
+
 Hijk_Status Hijk_EnableAllHooks() {
 	if (!GetMinHookInitializer().Ok()) return Hijk_Status::kInernalInitializationError;
 	return Hijk_Status::kOk;
 }
+
 Hijk_Status Hijk_DisableHook(void* target_function) { if (!GetMinHookInitializer().Ok()) return Hijk_Status::kInernalInitializationError; return Hijk_Status::kOk; }
 Hijk_Status Hijk_DisableAllHooks() { if (!GetMinHookInitializer().Ok()) return Hijk_Status::kInernalInitializationError; return Hijk_Status::kOk; }
 

@@ -1,57 +1,72 @@
-//-----------------------------------
-// Copyright Pierric Gimmig 2013-2017
-//-----------------------------------
 #pragma once
 
-#include <windows.h>
-#include "OrbitAsmC.h"
 #include <stdint.h>
 
-struct OrbitProlog
+#ifdef __cplusplus
+extern "C"
 {
-    OrbitProlog(){ memset( this, 0, sizeof( OrbitProlog ) ); }
-    void Init();
-    Prolog m_Data;
+#endif
+
+struct PrologData
+{
+    void *asm_prolog_stub;
+    void *c_prolog_stub;
+    void *asm_epilog_stub;
+    void *tramploline_to_original_function;
+    void *original_function;
+    void *user_callback;
 };
 
-struct OrbitEpilog
+struct EpilogData
 {
-    OrbitEpilog(){ memset( this, 0, sizeof( OrbitEpilog ) ); }
-    void Init();
-    Epilog m_Data;
+    void *asm_epilog_stub;
+    void *c_prolog_stub;
+    void *original_function;
+    void *user_callback;
 };
+
+struct HijkBuffer {
+    struct PrologData prolog_data;
+    struct EpilogData epilog_data;
+    char code[64];
+    uint32_t prolog_code_size;
+    uint32_t epilog_code_size;
+    uint32_t buffer_size;
+};
+
+void* WritePrologAndEpilogForTargetFunction(void* target_function, void* trampoline, void* buffer, uint64_t buffer_size);
 
 #pragma pack(push, 1)
 struct HijkIntegerRegisters
 {
     uint64_t regs[16];
 };
+
+struct HijkXmm {
+    float data[4];
+};
+
 struct HijkXmmRegisters
 {
-    _M128A xmm0;
-    _M128A xmm1;
-    _M128A xmm2;
-    _M128A xmm3;
-    _M128A xmm4;
-    _M128A xmm5;
-    _M128A xmm6;
-    _M128A xmm7;
-    _M128A xmm8;
-    _M128A xmm9;
-    _M128A xmm10;
-    _M128A xmm11;
-    _M128A xmm12;
-    _M128A xmm13;
-    _M128A xmm14;
-    _M128A xmm15;
+    struct HijkXmm xmm0;
+    struct HijkXmm xmm1;
+    struct HijkXmm xmm2;
+    struct HijkXmm xmm3;
+    struct HijkXmm xmm4;
+    struct HijkXmm xmm5;
+    struct HijkXmm xmm6;
+    struct HijkXmm xmm7;
+    struct HijkXmm xmm8;
+    struct HijkXmm xmm9;
+    struct HijkXmm xmm10;
+    struct HijkXmm xmm11;
+    struct HijkXmm xmm12;
+    struct HijkXmm xmm13;
+    struct HijkXmm xmm14;
+    struct HijkXmm xmm15;
 };
 #pragma pack(pop)
 
-extern "C" void HijkGetXmmRegisters(HijkXmmRegisters *a_Context);
-extern "C" void HijkSetXmmRegisters(HijkXmmRegisters *a_Context);
-extern "C" void HijkGetIntegerRegisters(void *a_Context);
-extern "C" void HijkSetIntegerRegisters(void *a_Context);
-extern "C" void HijkPrologAsm();
-extern "C" void HijkPrologAsmFixed();
-extern "C" void HijkEpilogAsmFixed();
-extern "C" void HijkEpilogAsm();
+#ifdef __cplusplus
+}
+#endif
