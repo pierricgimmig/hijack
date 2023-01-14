@@ -44,7 +44,8 @@ extern "C" {
 Hijk_Status Hijk_CreateHook(void* target_function, PrologueCallback prologue_callback, EpilogueCallback epilogue_callback) {
     if (!GetMinHookInitializer().Ok()) return Hijk_Status::kInernalInitializationError;
     
-     MH_STATUS MinHookError = MH_Orbit_CreateHookPrologEpilog(target_function, prologue_callback, epilogue_callback, &GetReturnAddress );
+	void* original = nullptr;
+     MH_STATUS MinHookError = MH_CreateHook(target_function, nullptr, &original );
     return MinHookError == MH_OK ? Hijk_Status::kOk : Hijk_Status::kUnknown;
 
 	return Hijk_Status::kOk;

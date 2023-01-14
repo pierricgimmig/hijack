@@ -113,7 +113,6 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
 // Allow user to specify a callback to be called after trampoline creation.
 typedef void* trampolineOverrideCallback(PTRAMPOLINE ct, void* free_space, UINT size);
 void SetTrampolineOverrideCallback(trampolineOverrideCallback*);
-BOOL CreatePrologFunction(PTRAMPOLINE ct);
 
 #ifdef __cplusplus
 }

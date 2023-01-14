@@ -193,16 +193,6 @@ extern "C" {
     // Test asm function
     void WINAPI MH_Test();
 
-    // Creates a Hook for the specified target function, in disabled state.
-    // Parameters:
-    //   pTarget    [in]  A pointer to the target function, which will be
-    //                    overridden by the detour function.
-    //   pCallback  [in]  A pointer to the callback function called in the prolog
-    //   ppOriginal [out] A pointer to the trampoline function, which will be
-    //                    used to call the original target function.
-    //                    This parameter can be NULL.
-    MH_STATUS WINAPI MH_Orbit_CreateHookPrologEpilog(LPVOID pTarget, LPVOID pPrologCallback, LPVOID pEpilogCallback, LPVOID pReturnAddressCallback);
-
     // Creates a Hook for the specified API function, in disabled state.
     // Parameters:
     //   pszModule  [in]  A pointer to the loaded module name which contains the
