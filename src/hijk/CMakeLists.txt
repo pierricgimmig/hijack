@@ -4,7 +4,6 @@ set(MINHOOK_DIR ${CMAKE_SOURCE_DIR}/third_party/minhook)
 
 set(HEADERS
     OrbitAsm.h
-    OrbitAsmC.h
     include/hijk/hijk.h
 )
 
@@ -37,10 +36,6 @@ source_group("HDE" FILES ${HDE_FILES})
 source_group("MinHook" FILES ${MINHOOK_FILES})
 source_group("Header Files" FILES ${HEADERS})
 source_group("Source Files" FILES ${SOURCES})
-
-# TODO: those are not working, we need to manually disable incremental linking after cmake generation.
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /DEBUG /INCREMENTAL:NO")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG /INCREMENTAL:NO")
 
 add_library(hijk SHARED
     ${SOURCES}

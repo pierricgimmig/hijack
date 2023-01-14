@@ -104,5 +104,17 @@ typedef struct _TRAMPOLINE
     UINT8  newIPs[8];       // [Out] Instruction boundaries of the trampoline function.
 } TRAMPOLINE, *PTRAMPOLINE;
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 BOOL CreateTrampolineFunction(PTRAMPOLINE ct);
+
+// Allow user to specify a callback to be called after trampoline creation.
+typedef void* trampolineOverrideCallback(PTRAMPOLINE ct, void* free_space, UINT size);
+void SetTrampolineOverrideCallback(trampolineOverrideCallback*);
 BOOL CreatePrologFunction(PTRAMPOLINE ct);
+
+#ifdef __cplusplus
+}
+#endif
