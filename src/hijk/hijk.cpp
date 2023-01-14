@@ -8,21 +8,16 @@
 #include "OrbitAsm.h"
 #include "trampoline.h"
 
-extern "C" void* OnTrampolineCreated(PTRAMPOLINE ct, void* relay_buffer, UINT relay_buffer_size) {
-  std::cout << "Trampoline created with " << relay_buffer_size << " free space";
-  return WritePrologAndEpilogForTargetFunction(ct->pTarget, ct->pTrampoline, relay_buffer,
-                                               relay_buffer_size);
-}
+extern "C" void* OnTrampolineCreated(PTRAMPOLINE ct, void* relay_buffer, UINT relay_buffer_size);
 
 class MinHookInitializer {
  public:
   MinHookInitializer() {
-    if (MH_Initialize() == MH_OK) {
-      ok_ = true;
+    ok_ = MH_Initialize() == MH_OK;
+    if (ok_) {
+      SetTrampolineOverrideCallback(&OnTrampolineCreated);
     }
-    SetTrampolineOverrideCallback(&OnTrampolineCreated);
   }
-
   ~MinHookInitializer() { MH_Uninitialize(); }
   bool Ok() const { return ok_; }
 
@@ -30,7 +25,7 @@ class MinHookInitializer {
   bool ok_ = false;
 };
 
-void EnsureMinhookInitialized() {
+static void EnsureMinhookInitialized() {
   static MinHookInitializer initializer;
   if (!initializer.Ok()) {
     std::cout << "Could not initialize MinHook, aborting";
@@ -79,6 +74,12 @@ bool Hijk_DisableAllHooks() {
   assert(0);
   EnsureMinhookInitialized();
   return true;
+}
+
+void* OnTrampolineCreated(PTRAMPOLINE ct, void* relay_buffer, UINT relay_buffer_size) {
+  std::cout << "Trampoline created with " << relay_buffer_size << " free space";
+  return WritePrologAndEpilogForTargetFunction(ct->pTarget, ct->pTrampoline, relay_buffer,
+                                               relay_buffer_size);
 }
 
 }  // extern "C" {
