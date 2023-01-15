@@ -7,15 +7,13 @@ extern "C" {
 #endif
 
 #define HIJK_API __declspec(dllexport)
-typedef void (*PrologueCallback)(void* target_function, struct PrologueContext* prologue_context);
-typedef void (*EpilogueCallback)(void* target_function, struct EpilogueContext* epilogue_context);
+
+typedef void (*Hijk_PrologueCallback)(void* target_function, struct Hijk_PrologueContext* context);
+typedef void (*Hijk_EpilogueCallback)(void* target_function, struct Hijk_EpilogueContext* context);
 
 // Dynamically instrument `target_function` and call prologue/epilogue callbacks on entry/exit.
-HIJK_API bool Hijk_CreateHook(void* target_function, PrologueCallback prologue_callback,
-                              EpilogueCallback epilogue_callback);
-
-HIJK_API bool Hijk_RemoveHook(void* target_function);
-HIJK_API bool Hijk_RemoveAllHooks();
+HIJK_API bool Hijk_CreateHook(void* target_function, Hijk_PrologueCallback prologue_callback,
+                              Hijk_EpilogueCallback epilogue_callback);
 
 HIJK_API bool Hijk_EnableHook(void* target_function);
 HIJK_API bool Hijk_EnableAllHooks();
@@ -23,7 +21,10 @@ HIJK_API bool Hijk_EnableAllHooks();
 HIJK_API bool Hijk_DisableHook(void* target_function);
 HIJK_API bool Hijk_DisableAllHooks();
 
-struct PrologData {
+HIJK_API bool Hijk_RemoveHook(void* target_function);
+HIJK_API bool Hijk_RemoveAllHooks();
+
+struct Hijk_PrologData {
   void* asm_prolog_stub;
   void* c_prolog_stub;
   void* asm_epilog_stub;
@@ -32,7 +33,7 @@ struct PrologData {
   void* user_callback;
 };
 
-struct EpilogData {
+struct Hijk_EpilogData {
   void* asm_epilog_stub;
   void* c_prolog_stub;
   void* original_function;
@@ -40,53 +41,44 @@ struct EpilogData {
 };
 
 #pragma pack(push, 1)
-struct HijkIntegerRegisters {
+struct Hijk_IntegerRegisters {
   uint64_t regs[16];
 };
 
-struct HijkXmm {
+struct Hijk_Xmm {
   float data[4];
 };
 
-struct HijkXmmRegisters {
-  struct HijkXmm xmm0;
-  struct HijkXmm xmm1;
-  struct HijkXmm xmm2;
-  struct HijkXmm xmm3;
-  struct HijkXmm xmm4;
-  struct HijkXmm xmm5;
-  struct HijkXmm xmm6;
-  struct HijkXmm xmm7;
-  struct HijkXmm xmm8;
-  struct HijkXmm xmm9;
-  struct HijkXmm xmm10;
-  struct HijkXmm xmm11;
-  struct HijkXmm xmm12;
-  struct HijkXmm xmm13;
-  struct HijkXmm xmm14;
-  struct HijkXmm xmm15;
+struct Hijk_XmmRegisters {
+  struct Hijk_Xmm xmm0;
+  struct Hijk_Xmm xmm1;
+  struct Hijk_Xmm xmm2;
+  struct Hijk_Xmm xmm3;
+  struct Hijk_Xmm xmm4;
+  struct Hijk_Xmm xmm5;
+  struct Hijk_Xmm xmm6;
+  struct Hijk_Xmm xmm7;
+  struct Hijk_Xmm xmm8;
+  struct Hijk_Xmm xmm9;
+  struct Hijk_Xmm xmm10;
+  struct Hijk_Xmm xmm11;
+  struct Hijk_Xmm xmm12;
+  struct Hijk_Xmm xmm13;
+  struct Hijk_Xmm xmm14;
+  struct Hijk_Xmm xmm15;
 };
 #pragma pack(pop)
 
-struct PrologueContext {
-  PrologData* prolog_data;
-  HijkIntegerRegisters integer_registers;
-  HijkXmmRegisters xmm_registers;
+struct Hijk_PrologueContext {
+  Hijk_PrologData* prolog_data;
+  Hijk_IntegerRegisters integer_registers;
+  Hijk_XmmRegisters xmm_registers;
 };
 
-struct EpilogueContext {
-  EpilogData* epilog_data;
-  HijkIntegerRegisters integer_registers;
-  HijkXmmRegisters xmm_registers;
-};
-
-struct HijkBuffer {
-  struct PrologData prolog_data;
-  struct EpilogData epilog_data;
-  char code[64];
-  uint32_t prolog_code_size;
-  uint32_t epilog_code_size;
-  uint32_t buffer_size;
+struct Hijk_EpilogueContext {
+  Hijk_EpilogData* epilog_data;
+  Hijk_IntegerRegisters integer_registers;
+  Hijk_XmmRegisters xmm_registers;
 };
 
 #ifdef __cplusplus

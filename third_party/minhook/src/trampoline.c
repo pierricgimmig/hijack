@@ -319,12 +319,12 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
 
     ct->pRelay = (LPBYTE)ct->pTrampoline + newPos;
     memcpy(ct->pRelay, &jmp, sizeof(jmp));
-#endif
 
     if (g_trampolineOverrideCallback) {
-        void* free_space = (LPBYTE)ct->pTrampoline + newPos;
-        UINT free_space_size = TRAMPOLINE_MAX_SIZE - newPos;
-        ct->pRelay = g_trampolineOverrideCallback(ct, free_space, free_space_size);
+        void* relay_buffer = ct->pRelay;
+        UINT relay_buffer_size = TRAMPOLINE_MAX_SIZE - newPos;
+        g_trampolineOverrideCallback(ct, ct->pRelay, relay_buffer_size);
     }
+#endif
     return TRUE;
 }
