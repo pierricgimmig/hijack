@@ -71,14 +71,14 @@ struct Hijk_XmmRegisters {
 
 struct Hijk_PrologContext {
   Hijk_PrologData* prolog_data;
-  Hijk_IntegerRegisters integer_registers;
-  Hijk_XmmRegisters xmm_registers;
+  Hijk_IntegerRegisters* integer_registers;
+  Hijk_XmmRegisters* xmm_registers;
 };
 
 struct Hijk_EpilogContext {
   Hijk_EpilogData* epilog_data;
-  Hijk_IntegerRegisters integer_registers;
-  Hijk_XmmRegisters xmm_registers;
+  Hijk_IntegerRegisters* integer_registers;
+  Hijk_XmmRegisters* xmm_registers;
 };
 
 #ifdef __cplusplus

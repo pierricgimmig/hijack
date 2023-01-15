@@ -1,12 +1,9 @@
 #include "hijk/hijk.h"
 
-#include <assert.h>
-
 #include <bit>
 #include <iostream>
 #include <optional>
 #include <span>
-#include <sstream>
 #include <vector>
 
 #include "MinHook.h"
@@ -73,6 +70,7 @@ struct MinHookInitializer {
     if (MH_Initialize() != MH_OK) {
       std::cout << "Could not initialize MinHook, aborting";
       abort();
+      ;
     }
     MH_SetRelayBufferOverwriteCallback(&OverwriteMinhookRelay);
   }
@@ -98,13 +96,13 @@ bool Hijk_CreateHook(void* target_function, Hijk_PrologCallback prolog_callback,
 }
 
 bool Hijk_RemoveHook(void* target_function) {
-  assert(0);
+  abort();
   MinHookInitializer::EnsureInitialized();
   return true;
 }
 
 bool Hijk_RemoveAllHooks() {
-  assert(0);
+  abort();
   MinHookInitializer::EnsureInitialized();
   return true;
 }
@@ -115,18 +113,18 @@ bool Hijk_EnableHook(void* target_function) {
 }
 
 bool Hijk_EnableAllHooks() {
-  assert(0);
+  abort();
   MinHookInitializer::EnsureInitialized();
   return true;
 }
 
 bool Hijk_DisableHook(void* target_function) {
-  assert(0);
+  abort();
   MinHookInitializer::EnsureInitialized();
   return true;
 }
 bool Hijk_DisableAllHooks() {
-  assert(0);
+  abort();
   MinHookInitializer::EnsureInitialized();
   return true;
 }
@@ -171,7 +169,13 @@ void UserPrologStub(Hijk_PrologData* prolog_data, void** address_of_return_addre
   ContextScope context_scope;
   tls_return_addresses.push_back(*address_of_return_address);
   Hijk_PrologCallback user_callback = static_cast<Hijk_PrologCallback>(prolog_data->user_callback);
-  if (user_callback) user_callback(prolog_data->original_function, nullptr);
+  if (user_callback) {
+    Hijk_PrologContext context;
+    context.prolog_data = prolog_data;
+    context.integer_registers = nullptr;
+    context.xmm_registers = nullptr;
+    user_callback(prolog_data->original_function, &context);
+  }
 }
 
 void UserEpilogStub(Hijk_EpilogData* epilog_data, void** address_of_return_address) {
@@ -180,7 +184,13 @@ void UserEpilogStub(Hijk_EpilogData* epilog_data, void** address_of_return_addre
   tls_return_addresses.pop_back();
   *address_of_return_address = return_address;
   Hijk_EpilogCallback user_callback = static_cast<Hijk_EpilogCallback>(epilog_data->user_callback);
-  if (user_callback) user_callback(epilog_data->original_function, nullptr);
+  if (user_callback) {
+    Hijk_EpilogContext context;
+    context.epilog_data = epilog_data;
+    context.integer_registers = nullptr;
+    context.xmm_registers = nullptr;
+    user_callback(epilog_data->original_function, &context);
+  }
 }
 
 void WritePrologAndEpilogForTargetFunction(void* target_function, void* trampoline,
@@ -196,18 +206,19 @@ void WritePrologAndEpilogForTargetFunction(void* target_function, void* trampoli
   size_t epilog_data_size = sizeof(struct Hijk_EpilogData);
 
   // Check that we have enough space in the relay buffer.
-  size_t total_size = prolog_data_size + epilog_data_size + prolog_size + epilog_size;
+  size_t total_size = prolog_size + epilog_size + prolog_data_size + epilog_data_size;
   if (total_size > buffer_size) {
     std::cout << "Hijk: Not enough space in the relay buffer";
     abort();
+    ;
   }
   std::cout << "Overwriting relay buffer with " << total_size << " bytes." << std::endl;
 
   // Set up pointers into relay_buffer.
   uint8_t* prolog = static_cast<uint8_t*>(relay_buffer);
   uint8_t* epilog = prolog + prolog_size;
-  auto* prolog_data = reinterpret_cast<Hijk_PrologData*>(epilog + epilog_size);
-  auto* epilog_data = reinterpret_cast<Hijk_EpilogData*>(epilog + epilog_size + prolog_data_size);
+  auto* prolog_data = std::bit_cast<Hijk_PrologData*>(epilog + epilog_size);
+  auto* epilog_data = std::bit_cast<Hijk_EpilogData*>(epilog + epilog_size + prolog_data_size);
 
   // Prolog.
   prolog_data->asm_prolog_stub = &HijkPrologAsmFixed;
