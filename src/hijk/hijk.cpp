@@ -172,8 +172,8 @@ void UserPrologStub(Hijk_PrologData* prolog_data, void** address_of_return_addre
   if (user_callback) {
     Hijk_PrologContext context;
     context.prolog_data = prolog_data;
-    context.integer_registers = nullptr;
-    context.xmm_registers = nullptr;
+    context.integer_registers = &context_scope.integer_registers_;
+    context.xmm_registers = &context_scope.xmm_registers_;
     user_callback(prolog_data->original_function, &context);
   }
 }
@@ -187,8 +187,8 @@ void UserEpilogStub(Hijk_EpilogData* epilog_data, void** address_of_return_addre
   if (user_callback) {
     Hijk_EpilogContext context;
     context.epilog_data = epilog_data;
-    context.integer_registers = nullptr;
-    context.xmm_registers = nullptr;
+    context.integer_registers = &context_scope.integer_registers_;
+    context.xmm_registers = &context_scope.xmm_registers_;
     user_callback(epilog_data->original_function, &context);
   }
 }
