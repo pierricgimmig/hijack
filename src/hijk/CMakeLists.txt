@@ -1,5 +1,7 @@
 enable_language(ASM_MASM)
 
+set(CMAKE_CXX_STANDARD 20)
+
 set(MINHOOK_DIR ${CMAKE_SOURCE_DIR}/third_party/minhook)
 
 set(HEADERS

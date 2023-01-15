@@ -49,9 +49,9 @@ typedef hde32s HDE;
 #include "trampoline.h"
 #include "buffer.h"
 
-trampolineOverrideCallback* g_trampolineOverrideCallback;
-void SetTrampolineOverrideCallback(trampolineOverrideCallback* callback) {
-    g_trampolineOverrideCallback = callback;
+MH_RelayBufferOverwriteCallback* g_relayBufferOverwriteCallback;
+void MH_SetRelayBufferOverwriteCallback(MH_RelayBufferOverwriteCallback* callback) {
+    g_relayBufferOverwriteCallback = callback;
 }
 
 // Maximum size of a trampoline function.
@@ -320,10 +320,9 @@ BOOL CreateTrampolineFunction(PTRAMPOLINE ct)
     ct->pRelay = (LPBYTE)ct->pTrampoline + newPos;
     memcpy(ct->pRelay, &jmp, sizeof(jmp));
 
-    if (g_trampolineOverrideCallback) {
-        void* relay_buffer = ct->pRelay;
+    if (g_relayBufferOverwriteCallback) {
         UINT relay_buffer_size = TRAMPOLINE_MAX_SIZE - newPos;
-        g_trampolineOverrideCallback(ct, ct->pRelay, relay_buffer_size);
+        g_relayBufferOverwriteCallback(ct, ct->pRelay, relay_buffer_size);
     }
 #endif
     return TRUE;

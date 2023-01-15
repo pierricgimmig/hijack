@@ -111,8 +111,8 @@ extern "C"
 #endif
 
 // Allow user to specify a callback to be called after trampoline creation.
-typedef void trampolineOverrideCallback(PTRAMPOLINE ct, void* free_space, UINT size);
-void SetTrampolineOverrideCallback(trampolineOverrideCallback*);
+typedef void MH_RelayBufferOverwriteCallback(PTRAMPOLINE ct, void* relay_buffer, UINT size);
+void MH_SetRelayBufferOverwriteCallback(MH_RelayBufferOverwriteCallback*);
 
 #ifdef __cplusplus
 }

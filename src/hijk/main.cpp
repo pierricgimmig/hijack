@@ -12,12 +12,12 @@ __declspec(noinline) void MyFunction(int a, float b) {
 }
 
 extern "C" {
-void Prologue(void* original_function, struct Hijk_PrologueContext* prologue_context) {
-  std::cout << "User Prologue!\n";
+void Prolog(void* original_function, struct Hijk_PrologContext* prolog_context) {
+  std::cout << "User Prolog!\n";
 }
-void Epilogue(void* original_function, struct Hijk_EpilogueContext* epilogue_context) {
+void Epilog(void* original_function, struct Hijk_EpilogContext* epilog_context) {
   ++g_count;
-  std::cout << "UserEpilogue!\n";
+  std::cout << "User Epilog!\n";
 }
 }
 
@@ -25,7 +25,7 @@ int main() {
   std::cout << "hi hijk\n";
 
   void* target_function = &MyFunction;
-  Hijk_CreateHook(target_function, &Prologue, &Epilogue);
+  Hijk_CreateHook(target_function, &Prolog, &Epilog);
   MyFunction(3, 45.5f);
   Hijk_EnableHook(target_function);
   MyFunction(3, 45.5f);

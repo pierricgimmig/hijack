@@ -8,12 +8,12 @@ extern "C" {
 
 #define HIJK_API __declspec(dllexport)
 
-typedef void (*Hijk_PrologueCallback)(void* target_function, struct Hijk_PrologueContext* context);
-typedef void (*Hijk_EpilogueCallback)(void* target_function, struct Hijk_EpilogueContext* context);
+typedef void (*Hijk_PrologCallback)(void* target_function, struct Hijk_PrologContext* context);
+typedef void (*Hijk_EpilogCallback)(void* target_function, struct Hijk_EpilogContext* context);
 
-// Dynamically instrument `target_function` and call prologue/epilogue callbacks on entry/exit.
-HIJK_API bool Hijk_CreateHook(void* target_function, Hijk_PrologueCallback prologue_callback,
-                              Hijk_EpilogueCallback epilogue_callback);
+// Dynamically instrument `target_function` and call prolog/epilog callbacks on entry/exit.
+HIJK_API bool Hijk_CreateHook(void* target_function, Hijk_PrologCallback prolog_callback,
+                              Hijk_EpilogCallback epilog_callback);
 
 HIJK_API bool Hijk_EnableHook(void* target_function);
 HIJK_API bool Hijk_EnableAllHooks();
@@ -69,13 +69,13 @@ struct Hijk_XmmRegisters {
 };
 #pragma pack(pop)
 
-struct Hijk_PrologueContext {
+struct Hijk_PrologContext {
   Hijk_PrologData* prolog_data;
   Hijk_IntegerRegisters integer_registers;
   Hijk_XmmRegisters xmm_registers;
 };
 
-struct Hijk_EpilogueContext {
+struct Hijk_EpilogContext {
   Hijk_EpilogData* epilog_data;
   Hijk_IntegerRegisters integer_registers;
   Hijk_XmmRegisters xmm_registers;
