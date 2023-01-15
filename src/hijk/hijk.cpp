@@ -95,38 +95,33 @@ bool Hijk_CreateHook(void* target_function, Hijk_PrologCallback prolog_callback,
   return MH_CreateHook(target_function, /*pDetour*/ &DummyFunction, &original) == MH_OK;
 }
 
-bool Hijk_RemoveHook(void* target_function) {
-  abort();
-  MinHookInitializer::EnsureInitialized();
-  return true;
-}
-
-bool Hijk_RemoveAllHooks() {
-  abort();
-  MinHookInitializer::EnsureInitialized();
-  return true;
-}
-
 bool Hijk_EnableHook(void* target_function) {
   MinHookInitializer::EnsureInitialized();
   return MH_EnableHook(target_function) == MH_OK;
 }
 
-bool Hijk_EnableAllHooks() {
-  abort();
+bool Hijk_DisableHook(void* target_function) {
   MinHookInitializer::EnsureInitialized();
-  return true;
+  return MH_DisableHook(target_function) == MH_OK;
 }
 
-bool Hijk_DisableHook(void* target_function) {
-  abort();
+bool Hijk_RemoveHook(void* target_function) {
   MinHookInitializer::EnsureInitialized();
-  return true;
+  return MH_RemoveHook(target_function) == MH_OK;
 }
-bool Hijk_DisableAllHooks() {
-  abort();
+
+bool Hijk_QueueEnableHook(void* target_function) {
   MinHookInitializer::EnsureInitialized();
-  return true;
+  return MH_QueueEnableHook(target_function) == MH_OK;
+}
+
+bool Hijk_QueueDisableHook(void* target_function) {
+  MinHookInitializer::EnsureInitialized();
+  return MH_QueueDisableHook(target_function) == MH_OK;
+}
+bool Hijk_ApplyQueued() {
+  MinHookInitializer::EnsureInitialized();
+  return MH_ApplyQueued() == MH_OK;
 }
 
 void OverwriteMinhookRelay(PTRAMPOLINE ct, void* relay_buffer, UINT relay_buffer_size) {

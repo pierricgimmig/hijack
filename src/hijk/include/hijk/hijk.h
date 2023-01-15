@@ -14,15 +14,13 @@ typedef void (*Hijk_EpilogCallback)(void* target_function, struct Hijk_EpilogCon
 // Dynamically instrument `target_function` and call prolog/epilog callbacks on entry/exit.
 HIJK_API bool Hijk_CreateHook(void* target_function, Hijk_PrologCallback prolog_callback,
                               Hijk_EpilogCallback epilog_callback);
-
 HIJK_API bool Hijk_EnableHook(void* target_function);
-HIJK_API bool Hijk_EnableAllHooks();
-
 HIJK_API bool Hijk_DisableHook(void* target_function);
-HIJK_API bool Hijk_DisableAllHooks();
-
 HIJK_API bool Hijk_RemoveHook(void* target_function);
-HIJK_API bool Hijk_RemoveAllHooks();
+
+HIJK_API bool Hijk_QueueEnableHook(void* target_function);
+HIJK_API bool Hijk_QueueDisableHook(void* target_function);
+HIJK_API bool Hijk_ApplyQueued();
 
 struct Hijk_PrologData {
   void* asm_prolog_stub;

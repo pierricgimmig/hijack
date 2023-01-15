@@ -20,9 +20,18 @@ int main() {
   std::cout << "hi hijk\n";
 
   void* target_function = &MyFunction;
+
   Hijk_CreateHook(target_function, &Prolog, &Epilog);
-  MyFunction(3, 45.5f);
+  MyFunction(1, 23.45f);
+
   Hijk_EnableHook(target_function);
-  MyFunction(3, 45.5f);
-  std::cout << "after instrumented call" << std::endl;
+  MyFunction(1, 23.45f);
+
+  Hijk_DisableHook(target_function);
+  MyFunction(1, 23.45f);
+
+  Hijk_RemoveHook(target_function);
+  MyFunction(1, 23.45f);
+
+  std::cout << "bye hijk\n";
 }
