@@ -1,3 +1,7 @@
+; Copyright (c) 2023 Pierric Gimmig. All rights reserved.
+; Use of this source code is governed by a BSD-style license that can be
+; found in the LICENSE file.
+
 .DATA 
 .CODE
 
@@ -23,7 +27,6 @@
 ; XMM5, YMM5    Volatile        Must be preserved as needed by caller; sixth vector-type argument when __vectorcall is used
 ; XMM6:XMM15, YMM6:YMM15        Nonvolatile (XMM), Volatile (upper half of YMM) Must be preserved as needed by callee. YMM registers must be preserved as needed by caller.
 
-; 
 HijkPrologAsm PROC
     sub     RSP, 8                  ;// will hold address of trampoline to original function
     push    RCX
